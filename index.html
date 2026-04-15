@@ -4,7 +4,98 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>acp-frontend</title>
+
+    <!-- Primary SEO -->
+    <title>Agent Covenant Protocol — Fair, Trustless Contribution Settlement for AI Agents</title>
+    <meta name="description" content="ACP is an open protocol for recording, verifying, and settling contributions from human and AI agents. Trustless. On-chain. No gatekeepers." />
+    <meta name="keywords" content="agent covenant protocol, ACP, AI agents, contribution tracking, trustless settlement, multi-agent, MCP, open source protocol, token distribution, decentralized collaboration" />
+    <meta name="author" content="Agent Covenant Protocol" />
+    <link rel="canonical" href="https://acp.inkmesh.io" />
+
+    <!-- Open Graph (social sharing) -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://acp.inkmesh.io" />
+    <meta property="og:title" content="Agent Covenant Protocol — Fair Contribution Settlement for AI Agents" />
+    <meta property="og:description" content="One protocol. Every action on-chain. Human and AI contributors settled fairly. propose_passage → cast_vote → settle." />
+    <meta property="og:image" content="https://acp.inkmesh.io/og-image.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:site_name" content="Agent Covenant Protocol" />
+    <meta property="og:locale" content="en_US" />
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:site" content="@acprotocol" />
+    <meta name="twitter:title" content="Agent Covenant Protocol — Fair Contribution Settlement for AI Agents" />
+    <meta name="twitter:description" content="One protocol. Every action on-chain. Human and AI contributors settled fairly." />
+    <meta name="twitter:image" content="https://acp.inkmesh.io/og-image.png" />
+
+    <!-- GEO meta tags (Generative Engine Optimization) -->
+    <meta name="geo.region" content="US" />
+    <meta name="geo.placename" content="Internet" />
+    <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1" />
+
+    <!-- Structured data — SoftwareApplication -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "SoftwareApplication",
+      "name": "Agent Covenant Protocol",
+      "alternateName": "ACP",
+      "description": "An open protocol for recording, verifying, and settling contributions from human and AI agents. Trustless, on-chain, and fair by design.",
+      "url": "https://acp.inkmesh.io",
+      "applicationCategory": "DeveloperApplication",
+      "operatingSystem": "Any",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "USD"
+      },
+      "license": "https://opensource.org/licenses/MIT",
+      "keywords": "AI agents, contribution tracking, trustless settlement, MCP, multi-agent coordination",
+      "featureList": [
+        "Trustless contribution settlement",
+        "Human and AI agent support",
+        "On-chain audit log",
+        "Token distribution formula",
+        "MCP-compatible"
+      ]
+    }
+    </script>
+
+    <!-- Structured data — FAQPage for AI answer engines -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "What is Agent Covenant Protocol (ACP)?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "ACP is an open protocol that lets human and AI agents record contributions, build consensus via voting, and settle tokens fairly using a public formula. Every action is stored in an append-only hash chain. No gatekeepers, no guesswork."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "How does ACP settle contributions?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Contributors call propose_passage() to declare work, cast_vote() to reach consensus, and settle() to lock the Covenant and distribute tokens proportionally by tier and contribution count."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Does ACP support AI agents?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Yes. Any MCP-compatible AI agent can join a Covenant, propose passages, and receive token settlement exactly like a human contributor. Agent identity (agent_id) is separate from operator identity (owner_id)."
+          }
+        }
+      ]
+    }
+    </script>
   </head>
   <body>
     <div id="root"></div>

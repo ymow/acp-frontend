@@ -1,6 +1,81 @@
 import { Button, Link } from 'react-aria-components'
 import './App.css'
 
+function CovenantFlow() {
+  const states = ['DRAFT', 'OPEN', 'ACTIVE', 'LOCKED', 'SETTLED']
+  const colors: Record<string, string> = {
+    DRAFT:   'border-gray-300 dark:border-gray-600 text-gray-500 dark:text-gray-400',
+    OPEN:    'border-blue-300 dark:border-blue-700 text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/40',
+    ACTIVE:  'border-violet-400 dark:border-violet-600 text-violet-700 dark:text-violet-300 bg-violet-50 dark:bg-violet-950/40',
+    LOCKED:  'border-amber-300 dark:border-amber-700 text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/40',
+    SETTLED: 'border-green-400 dark:border-green-700 text-green-700 dark:text-green-400 bg-green-50 dark:bg-green-950/40',
+  }
+  const labels: Record<string, string> = {
+    DRAFT:   'configure',
+    OPEN:    'join',
+    ACTIVE:  'contribute',
+    LOCKED:  'settle',
+    SETTLED: '✓',
+  }
+  return (
+    <div className="flex items-center justify-center gap-0 flex-wrap">
+      {states.map((s, i) => (
+        <div key={s} className="flex items-center">
+          <div className={`flex flex-col items-center px-4 py-2.5 rounded-xl border-2 min-w-[80px] ${colors[s]}`}>
+            <span className="text-xs font-mono font-semibold">{s}</span>
+            <span className="text-[10px] opacity-60 mt-0.5">{labels[s]}</span>
+          </div>
+          {i < states.length - 1 && (
+            <svg className="w-8 h-4 text-gray-300 dark:text-gray-600 shrink-0" viewBox="0 0 32 16" fill="none">
+              <path d="M2 8h24M20 3l6 5-6 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+          )}
+        </div>
+      ))}
+    </div>
+  )
+}
+
+function GitTwinDiagram() {
+  const rows = [
+    { git: 'git push', arrow: '→', acp: 'propose_passage', sub: 'draft pending' },
+    { git: 'PR merged', arrow: '→', acp: 'approve_draft', sub: 'tokens awarded' },
+    { git: 'git tag v1.0', arrow: '→', acp: 'generate_settlement', sub: 'proportional payout' },
+    { git: 'settlement hash', arrow: '→', acp: 'git commit anchor', sub: 'Layer 2 proof' },
+  ]
+  return (
+    <div className="rounded-xl border border-gray-100 dark:border-gray-800 overflow-hidden">
+      <div className="grid grid-cols-2 bg-gray-50 dark:bg-gray-900 border-b border-gray-100 dark:border-gray-800">
+        <div className="px-5 py-3 flex items-center gap-2">
+          <span className="w-2 h-2 rounded-full bg-gray-400" />
+          <span className="text-xs font-semibold text-gray-500 uppercase tracking-widest">Git Repo</span>
+          <span className="text-xs text-gray-400">source of truth for code</span>
+        </div>
+        <div className="px-5 py-3 flex items-center gap-2 border-l border-gray-100 dark:border-gray-800">
+          <span className="w-2 h-2 rounded-full bg-violet-500" />
+          <span className="text-xs font-semibold text-violet-500 uppercase tracking-widest">ACP Covenant</span>
+          <span className="text-xs text-gray-400">source of truth for value</span>
+        </div>
+      </div>
+      {rows.map((r, i) => (
+        <div key={i} className="grid grid-cols-2 border-b last:border-0 border-gray-100 dark:border-gray-800 hover:bg-gray-50/50 dark:hover:bg-gray-900/50 transition-colors">
+          <div className="px-5 py-3.5 font-mono text-sm text-gray-700 dark:text-gray-300 flex items-center gap-2">
+            <span className="text-gray-400 dark:text-gray-600">$</span>
+            {r.git}
+          </div>
+          <div className="px-5 py-3.5 border-l border-gray-100 dark:border-gray-800">
+            <div className="flex items-center gap-2">
+              <span className="text-violet-400 text-xs">{r.arrow}</span>
+              <span className="font-mono text-sm text-violet-700 dark:text-violet-300">{r.acp}</span>
+            </div>
+            <p className="text-xs text-gray-400 mt-0.5 ml-4">{r.sub}</p>
+          </div>
+        </div>
+      ))}
+    </div>
+  )
+}
+
 const NAV_LINKS = [
   { label: 'Why', href: '#why' },
   { label: 'How', href: '#how' },
@@ -165,6 +240,12 @@ export default function App() {
           <p className="text-xs font-semibold uppercase tracking-widest text-violet-500 mb-4">How it works</p>
           <h2 className="text-3xl sm:text-4xl font-semibold tracking-tight mb-16">Five steps, one formula.</h2>
 
+          {/* State machine */}
+          <div className="mb-16">
+            <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-6">Covenant lifecycle</p>
+            <CovenantFlow />
+          </div>
+
           {/* Formula */}
           <div className="mb-16 p-6 rounded-xl border border-violet-100 dark:border-violet-900 bg-violet-50 dark:bg-violet-950/30 font-mono text-center">
             <p className="text-xs text-violet-400 mb-3 uppercase tracking-widest">Ink Token Formula</p>
@@ -205,6 +286,13 @@ export default function App() {
                 </div>
               ))}
             </div>
+          </div>
+
+          {/* Git Twin diagram */}
+          <div className="mb-16">
+            <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Git Covenant Twin</p>
+            <p className="text-xs text-gray-400 mb-5">ACP is the contribution-value digital twin of your git repo. Git events automatically sync to Covenant actions.</p>
+            <GitTwinDiagram />
           </div>
 
           {/* Verification */}

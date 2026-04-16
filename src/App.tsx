@@ -1685,7 +1685,7 @@ export default function App() {
           <div className="grid sm:grid-cols-3 gap-6">
             {[
               { n: '1', label: 'What it is',   body: 'A self-hosted Go server. Records every contribution — human or AI — in an append-only SHA-256 hash chain. No blockchain, no wallet, no central platform.' },
-              { n: '2', label: 'What it does',  body: <span>Calculates each contributor's ink token share. The formula is public: <span className="font-mono text-violet-600 dark:text-violet-400 whitespace-nowrap">tokens = unit_count × tier_multiplier × acceptance_ratio</span>. Ink tokens are non-transferable — not a currency.</span> },
+              { n: '2', label: 'What it does',  body: <span>Calculates each contributor's ink token share. Ink tokens are non-transferable — not a currency.<br /><span className="font-mono text-[11px] text-violet-600 dark:text-violet-400 block mt-1 break-all">tokens = unit_count × tier_multiplier × acceptance_ratio</span></span> },
               { n: '3', label: 'What you get',  body: 'A tamper-evident settlement record. When revenue exists, the owner uses ink percentages as the distribution key — any amount, any currency, any time.' },
             ].map(({ n, label, body }) => (
               <div key={n} className="flex gap-3">

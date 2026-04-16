@@ -1970,7 +1970,7 @@ export default function App() {
             <p className="text-xs text-gray-400 mb-5">ACP is not a blockchain. Choose your trust model based on what the collaboration needs.</p>
             <div className="space-y-3">
               {[
-                { layer:'Layer 1', name:'Hash Chain',  status:'Live',    desc:'Append-only SHA-256 chain on your own server. Tamper-evident. Trust the server owner. No blockchain required.',  color:'green' },
+                { layer:'Layer 1', name:'Hash Chain',  status:'Live',    desc:'Append-only SHA-256 chain on your own server. Each action hashes the previous — any edit breaks all subsequent hashes and is immediately detectable. Requires trusting the server operator has not replaced the entire chain. No blockchain required.',  color:'green' },
                 { layer:'Layer 2', name:'Git Anchor',  status:'Phase 3', desc:'Settlement hash committed to the git repo as a signed commit. If the server is ever deleted or tampered with, the git history independently proves the settlement hash existed at that point in time. Trust git history, not the server owner.', color:'yellow' },
                 { layer:'Layer 3', name:'On-chain',    status:'Phase 7', desc:'Merkle root on a public blockchain. Trustless, permissionless verification. No trust required.',                color:'gray'   },
               ].map(v => (
@@ -2010,12 +2010,17 @@ export default function App() {
           </div>
 
           <div className="mb-16">
-            <div className="flex items-baseline gap-3 mb-1">
+            <div className="flex items-baseline flex-wrap gap-x-3 gap-y-1 mb-1">
               <p className="text-sm font-medium text-gray-700 dark:text-gray-300">First settled Covenant</p>
               <span className="font-mono text-[10px] text-gray-400">cvnt_a54e1c43 · 2026-04-15</span>
-              <span className="text-[10px] text-green-500 font-medium">✓ verified</span>
+              <span className="text-[10px] text-green-500 font-medium">✓ settled</span>
+              <button
+                onClick={() => window.open('https://github.com/ymow/acp-server', '_blank')}
+                className="text-[10px] text-violet-500 hover:text-violet-400 underline underline-offset-2 cursor-pointer outline-none">
+                verify in repo →
+              </button>
             </div>
-            <p className="text-xs text-gray-400 mb-6">Real settlement data from acp-server. Token distribution visualised — hover a slice to inspect.</p>
+            <p className="text-xs text-gray-400 mb-6">Real settlement output from acp-server — not mock data. Token distribution visualised — hover a slice to inspect.</p>
             <SettlementDonut />
           </div>
 

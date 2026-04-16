@@ -1562,6 +1562,64 @@ const SETTLEMENT = [
 ]
 
 /* ═══════════════════════════════════════════════════════════════════════════
+   FAQ accordion
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+const FAQ_ITEMS = [
+  {
+    q: 'What is ACP in one sentence?',
+    a: 'ACP is a self-hosted Go server that records every contribution from humans and AI agents in a tamper-evident hash chain, then uses a public formula to calculate each contributor\'s share when you\'re ready to distribute revenue.',
+  },
+  {
+    q: 'Is ACP a blockchain or DApp?',
+    a: 'No. ACP is a self-hosted Go server with a SHA-256 append-only hash chain stored on your own machine. No Ethereum, no Solana, no wallet required. On-chain anchoring (Merkle root on a public chain) is a Phase 7 roadmap item — not the current implementation.',
+  },
+  {
+    q: 'What are ink tokens? Can I trade or transfer them?',
+    a: 'Ink is a contribution unit, not a cryptocurrency. It is non-transferable, non-tradeable, and scoped to a single Covenant. It cannot be sent to a wallet. Its only purpose is to record relative contribution weight — who built what, at which tier — so the settlement formula has something to calculate from.',
+  },
+  {
+    q: 'Who is "the owner" and what can they do?',
+    a: 'The owner is whoever creates the Covenant — typically the project lead or founder. They set the contribution tiers, approve incoming participants (approve_agent), approve individual contribution drafts (approve_draft), and initiate settlement (generate_settlement_output + confirm_settlement_output). They also decide when and how to distribute revenue using the settled ink percentages as the distribution key.',
+  },
+  {
+    q: 'What is a "passage"? What counts as a contribution?',
+    a: 'A passage is any unit of work a contributor submits via propose_passage(). It could be a feature, a commit batch, a review, a document, or any deliverable the Covenant\'s tiers cover. The owner assigns a unit_count (e.g. lines of code, word count) and the formula calculates tokens from that.',
+  },
+  {
+    q: 'Does settlement move money automatically?',
+    a: 'No. Settlement generates a verified, tamper-evident record — nothing more. The owner calls generate_settlement_output() then confirm_settlement_output() to lock ink totals permanently. Any financial distribution is a separate, owner-initiated action: pay by product revenue share, sponsor funding, or (in Phase 7) an on-chain smart contract. The protocol enforces the record, not the payment.',
+  },
+  {
+    q: 'Is this live, or a prototype?',
+    a: 'ACP is live. Phase 1 and Phase 2 are complete. The first real Covenant was settled on 2026-04-15. The acp-server repository is MIT licensed and publicly available. You can run it today with a single binary and no external dependencies.',
+  },
+]
+
+function FaqAccordion() {
+  const [openIdx, setOpenIdx] = useState<number | null>(null)
+  return (
+    <div className="divide-y divide-gray-100 dark:divide-gray-800">
+      {FAQ_ITEMS.map(({ q, a }, i) => (
+        <div key={i}>
+          <button
+            onClick={() => setOpenIdx(openIdx === i ? null : i)}
+            className="w-full flex items-center justify-between py-5 text-left gap-4 group outline-none focus-visible:ring-2 focus-visible:ring-violet-500 rounded"
+            aria-expanded={openIdx === i}
+          >
+            <span className="font-medium text-gray-900 dark:text-gray-100 text-sm sm:text-base group-hover:text-violet-600 dark:group-hover:text-violet-400 transition-colors">{q}</span>
+            <span className={`text-gray-400 text-xl font-light transition-transform duration-200 shrink-0 ${openIdx === i ? 'rotate-45' : ''}`}>+</span>
+          </button>
+          <div className={`overflow-hidden transition-all duration-200 ${openIdx === i ? 'max-h-96 pb-5' : 'max-h-0'}`}>
+            <p className="text-sm text-gray-500 dark:text-gray-400 leading-relaxed">{a}</p>
+          </div>
+        </div>
+      ))}
+    </div>
+  )
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
    App
    ═══════════════════════════════════════════════════════════════════════════ */
 
@@ -1588,6 +1646,28 @@ export default function App() {
           </div>
         </nav>
       </header>
+
+      {/* Plain-English strip — answers every reviewer before the hero loads */}
+      <section className="bg-white dark:bg-[#09090b] border-b border-gray-100 dark:border-white/6">
+        <div className="max-w-5xl mx-auto px-6 py-7">
+          <p className="text-[10px] font-semibold uppercase tracking-widest text-gray-400 mb-4">ACP in plain English</p>
+          <div className="grid sm:grid-cols-3 gap-6">
+            {[
+              { n: '1', label: 'What it is',   body: 'A self-hosted Go server. Records every contribution — human or AI — in an append-only SHA-256 hash chain. No blockchain, no wallet, no central platform.' },
+              { n: '2', label: 'What it does',  body: 'Calculates each contributor\'s ink token share with a public formula. Ink tokens are contribution units — non-transferable, not a currency.' },
+              { n: '3', label: 'What you get',  body: 'A tamper-evident settlement record. When revenue exists, the owner uses ink percentages as the distribution key — any amount, any currency, any time.' },
+            ].map(({ n, label, body }) => (
+              <div key={n} className="flex gap-3">
+                <span className="text-violet-400 font-mono text-xs mt-0.5 shrink-0 w-4">{n}.</span>
+                <div>
+                  <p className="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-1">{label}</p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 leading-relaxed">{body}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
 
       {/* Hero — cyberpunk canvas bg */}
       <section className="relative overflow-hidden bg-[#040410] min-h-screen flex flex-col items-center justify-center">
@@ -2137,35 +2217,12 @@ export default function App() {
       </section>
 
       {/* FAQ */}
-      <section className="border-t border-gray-100 dark:border-gray-800">
+      <section className="border-t border-gray-100 dark:border-gray-800" id="faq">
         <div className="max-w-3xl mx-auto px-6 py-24">
           <p className="text-xs font-semibold uppercase tracking-widest text-violet-500 mb-2">FAQ</p>
-          <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight mb-12">Common questions</h2>
-          <div className="space-y-8">
-            {[
-              {
-                q: 'Is ACP a blockchain or DApp?',
-                a: 'No. ACP is a self-hosted Go server. The audit chain is a SHA-256 append-only hash chain stored on your server — not Ethereum, not Solana, no wallet required. On-chain anchoring is a Phase 7 roadmap item.'
-              },
-              {
-                q: 'What are ink tokens? Can I trade or transfer them?',
-                a: 'Ink is a contribution unit, not a cryptocurrency. It is non-transferable, non-tradeable, and scoped to a single Covenant. It exists only to record relative contribution weight — who built what, and at which tier. It cannot be sent to a wallet.'
-              },
-              {
-                q: 'Does settlement move money automatically?',
-                a: 'No. Settlement generates a verified, tamper-evident record. The owner calls generate_settlement_output() then confirm_settlement_output() to lock the record. Any financial distribution — product revenue, sponsor funding, or future on-chain escrow — is a separate, owner-initiated action.'
-              },
-              {
-                q: 'Is this live, or a prototype?',
-                a: 'ACP is live. Phase 1 and Phase 2 are complete. The first real Covenant was settled on 2026-04-15. The acp-server repository is public and MIT licensed. You can run it today with a single binary.'
-              },
-            ].map(({ q, a }) => (
-              <div key={q} className="border-b border-gray-100 dark:border-gray-800 pb-8 last:border-0 last:pb-0">
-                <p className="font-semibold text-gray-900 dark:text-gray-100 mb-2">{q}</p>
-                <p className="text-gray-500 dark:text-gray-400 leading-relaxed text-sm">{a}</p>
-              </div>
-            ))}
-          </div>
+          <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight mb-2">Common questions</h2>
+          <p className="text-sm text-gray-400 mb-10">Everything a developer needs to know before running ACP.</p>
+          <FaqAccordion />
         </div>
       </section>
 

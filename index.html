@@ -6,17 +6,17 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
     <!-- Primary SEO -->
-    <title>Agent Covenant Protocol — Contribution Tracking and Fair Settlement for Humans and AI</title>
-    <meta name="description" content="ACP is an open protocol for recording, verifying, and settling contributions from human and AI agents. Formula-based. Self-hosted. No central platform. MIT licensed." />
-    <meta name="keywords" content="agent covenant protocol, ACP, AI agents, contribution tracking, fair settlement, multi-agent collaboration, MCP, Model Context Protocol, open source protocol, token distribution, self-hosted" />
+    <title>Agent Covenant Protocol (ACP) — Record Contributions, Distribute Revenue Fairly</title>
+    <meta name="description" content="ACP is a self-hosted Go server that records every contribution from humans and AI agents in a SHA-256 hash chain. Settlement formula is public. Ink tokens are non-transferable contribution units — not a cryptocurrency. No blockchain, no wallet. MIT licensed." />
+    <meta name="keywords" content="agent covenant protocol, ACP, contribution tracking, fair revenue distribution, AI agent collaboration, MCP server, Model Context Protocol, self-hosted contribution ledger, ink tokens, open source protocol, multi-agent coordination, human AI collaboration" />
     <meta name="author" content="Agent Covenant Protocol" />
     <link rel="canonical" href="https://acp.inkmesh.io" />
 
     <!-- Open Graph (social sharing) -->
     <meta property="og:type" content="website" />
     <meta property="og:url" content="https://acp.inkmesh.io" />
-    <meta property="og:title" content="Agent Covenant Protocol — Contribution Tracking and Fair Settlement for Humans and AI" />
-    <meta property="og:description" content="Open protocol for recording contributions and distributing tokens by a public formula. Self-hosted, no central platform. propose_passage → approve_draft → confirm_settlement_output." />
+    <meta property="og:title" content="Agent Covenant Protocol — Record Contributions, Distribute Revenue Fairly" />
+    <meta property="og:description" content="Self-hosted Go server. Records every contribution from humans and AI agents. Public formula: tokens = unit_count × tier_multiplier × acceptance_ratio. No blockchain. No wallet. MIT licensed." />
     <meta property="og:image" content="https://acp.inkmesh.io/og-image.png" />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
@@ -26,8 +26,8 @@
     <!-- Twitter Card -->
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:site" content="@acprotocol" />
-    <meta name="twitter:title" content="Agent Covenant Protocol — Contribution Tracking and Fair Settlement for Humans and AI" />
-    <meta name="twitter:description" content="Open protocol for recording contributions and distributing tokens by a public formula. Self-hosted, no blockchain required." />
+    <meta name="twitter:title" content="Agent Covenant Protocol — Record Contributions, Distribute Revenue Fairly" />
+    <meta name="twitter:description" content="Self-hosted Go server. SHA-256 hash chain. Public token formula. No blockchain, no wallet. Ink tokens are contribution units — not a cryptocurrency." />
     <meta name="twitter:image" content="https://acp.inkmesh.io/og-image.png" />
 
     <!-- GEO meta tags (Generative Engine Optimization) -->
@@ -42,7 +42,7 @@
       "@type": "SoftwareApplication",
       "name": "Agent Covenant Protocol",
       "alternateName": "ACP",
-      "description": "An open protocol for recording, verifying, and settling contributions from human and AI agents. Trustless, on-chain, and fair by design.",
+      "description": "A self-hosted Go server for recording, verifying, and settling contributions from human and AI agents. Formula-based, tamper-evident, and fair by design. No blockchain, no wallet required.",
       "url": "https://acp.inkmesh.io",
       "applicationCategory": "DeveloperApplication",
       "operatingSystem": "Any",
@@ -54,11 +54,12 @@
       "license": "https://opensource.org/licenses/MIT",
       "keywords": "AI agents, contribution tracking, trustless settlement, MCP, multi-agent coordination",
       "featureList": [
-        "Trustless contribution settlement",
-        "Human and AI agent support",
-        "On-chain audit log",
-        "Token distribution formula",
-        "MCP-compatible"
+        "Tamper-evident SHA-256 hash chain audit log",
+        "Human and AI agent support via MCP",
+        "Public token formula: unit_count × tier_multiplier × acceptance_ratio",
+        "Non-transferable ink contribution units",
+        "Self-hosted, zero external dependencies",
+        "MIT licensed"
       ]
     }
     </script>
@@ -74,23 +75,55 @@
           "name": "What is Agent Covenant Protocol (ACP)?",
           "acceptedAnswer": {
             "@type": "Answer",
-            "text": "ACP is an open protocol that lets human and AI agents record contributions, build consensus via voting, and settle tokens fairly using a public formula. Every action is stored in an append-only hash chain. No gatekeepers, no guesswork."
+            "text": "ACP is a self-hosted Go server that records every contribution from humans and AI agents in a SHA-256 append-only hash chain. A public formula calculates each contributor's ink token share. When revenue exists, the owner distributes by that share. No blockchain, no wallet, no central platform."
           }
         },
         {
           "@type": "Question",
-          "name": "How does ACP settle contributions?",
+          "name": "Is ACP a blockchain or DApp?",
           "acceptedAnswer": {
             "@type": "Answer",
-            "text": "Contributors call propose_passage() to declare work, cast_vote() to reach consensus, and settle() to lock the Covenant and distribute tokens proportionally by tier and contribution count."
+            "text": "No. ACP is a self-hosted Go server with a SHA-256 append-only hash chain stored on your own machine. No Ethereum, no Solana, no crypto wallet required. On-chain anchoring is a Phase 7 roadmap item — not the current implementation."
           }
         },
         {
           "@type": "Question",
-          "name": "Does ACP support AI agents?",
+          "name": "What are ink tokens? Can I trade or transfer them?",
           "acceptedAnswer": {
             "@type": "Answer",
-            "text": "Yes. Any MCP-compatible AI agent can join a Covenant, propose passages, and receive token settlement exactly like a human contributor. Agent identity (agent_id) is separate from operator identity (owner_id)."
+            "text": "Ink is a contribution unit, not a cryptocurrency. It is non-transferable, non-tradeable, and scoped to a single Covenant. It cannot be sent to a wallet. Its only purpose is to record relative contribution weight so the settlement formula has something to calculate from."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Who is the owner in ACP?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "The owner is whoever creates the Covenant — typically the project lead or founder. They approve participants (approve_agent), approve contribution drafts (approve_draft), and initiate settlement (generate_settlement_output + confirm_settlement_output). They also decide when and how to distribute revenue using settled ink percentages as the distribution key."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "What is a passage in ACP?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "A passage is any unit of work submitted via propose_passage(). It can be a feature, a commit batch, a code review, a document, or any deliverable covered by the Covenant's tiers. The owner assigns a unit_count and the formula calculates tokens from that."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Does ACP settlement move money automatically?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "No. Settlement generates a verified, tamper-evident record — nothing more. The owner calls generate_settlement_output() then confirm_settlement_output() to lock ink totals. Any financial distribution is a separate, owner-initiated action in any currency. Automated on-chain escrow is a Phase 7 roadmap item."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Is ACP live or a prototype?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "ACP is live. Phase 1 and Phase 2 are complete. The first real Covenant was settled on 2026-04-15. The acp-server repository is MIT licensed and publicly available. You can run it today with a single binary and zero external dependencies."
           }
         }
       ]

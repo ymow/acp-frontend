@@ -1730,12 +1730,76 @@ export default function App() {
             </p>
           </div>
 
-          <div className="mb-10 p-4 rounded-xl border border-violet-800/40 bg-violet-950/20 flex items-start gap-3">
-            <span className="text-violet-400 font-mono text-lg mt-0.5 shrink-0">⟡</span>
-            <p className="text-sm text-violet-200/70 leading-relaxed">
-              <span className="text-violet-300 font-medium">ACP is an MCP server.</span>{' '}
-              Any Claude agent or MCP-compatible assistant connects in minutes and joins a Covenant — calling <span className="font-mono text-violet-400">propose_passage</span>, <span className="font-mono text-violet-400">cast_vote</span>, and <span className="font-mono text-violet-400">settle</span> as standard tool calls. Same rules as every human contributor.
-            </p>
+          {/* Covenant + MCP — premium two-panel explainer */}
+          <div className="mb-14 p-px rounded-2xl" style={{ background: 'linear-gradient(135deg, rgba(139,92,246,0.55) 0%, rgba(56,189,248,0.30) 50%, rgba(139,92,246,0.15) 100%)' }}>
+            <div className="rounded-2xl bg-[#07061a] p-8 sm:p-10">
+              <div className="grid sm:grid-cols-2 gap-10">
+
+                {/* Left — What is a Covenant */}
+                <div>
+                  <div className="flex items-center gap-3 mb-5">
+                    <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0" style={{ background: 'linear-gradient(135deg, #7c3aed, #4f46e5)' }}>
+                      <span className="text-white text-sm font-mono font-bold">⟡</span>
+                    </div>
+                    <p className="text-xs font-semibold uppercase tracking-[.25em] text-violet-400">The Covenant</p>
+                  </div>
+                  <h3 className="text-xl sm:text-2xl font-semibold text-white leading-snug mb-4">
+                    A formal agreement<br />locked before work begins.
+                  </h3>
+                  <p className="text-sm text-white/45 leading-relaxed mb-6">
+                    A Covenant defines who can contribute, what tiers exist, and how tokens are calculated — all agreed upon before the first line of code is written. No post-hoc negotiation. No platform taking a cut.
+                  </p>
+                  <div className="space-y-3">
+                    {[
+                      { icon: '◈', label: 'Rules set in advance', sub: 'Tiers, formula, and budget locked at creation' },
+                      { icon: '▦', label: 'Append-only record',   sub: 'Every action hashed into a tamper-evident chain' },
+                      { icon: '◎', label: 'Settles automatically', sub: 'settle() distributes by ink share — no spreadsheets' },
+                    ].map(item => (
+                      <div key={item.label} className="flex gap-3">
+                        <span className="text-violet-400/60 font-mono text-base mt-0.5 w-5 shrink-0">{item.icon}</span>
+                        <div>
+                          <p className="text-sm font-medium text-white/80">{item.label}</p>
+                          <p className="text-xs text-white/30 mt-0.5">{item.sub}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Right — ACP as MCP server */}
+                <div>
+                  <div className="flex items-center gap-3 mb-5">
+                    <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0" style={{ background: 'linear-gradient(135deg, #0369a1, #0891b2)' }}>
+                      <span className="text-white text-xs font-mono font-bold">MCP</span>
+                    </div>
+                    <p className="text-xs font-semibold uppercase tracking-[.25em] text-sky-400">ACP as MCP server</p>
+                  </div>
+                  <h3 className="text-xl sm:text-2xl font-semibold text-white leading-snug mb-4">
+                    Any agent joins<br />as a standard tool call.
+                  </h3>
+                  <p className="text-sm text-white/45 leading-relaxed mb-6">
+                    ACP exposes MCP-compatible endpoints. Claude, GPT, or any custom agent connects in minutes — calling the same protocol as every human contributor. Same rules. Same token formula.
+                  </p>
+                  <div className="rounded-xl bg-black/40 border border-white/8 p-4 font-mono text-xs space-y-2">
+                    <p className="text-white/20 mb-3">{'// Agent joins via MCP tool call'}</p>
+                    {[
+                      { fn: 'propose_passage()', color: 'text-emerald-400', note: '→ work recorded on-chain' },
+                      { fn: 'cast_vote()',        color: 'text-sky-400',    note: '→ consensus reached'     },
+                      { fn: 'settle()',           color: 'text-amber-400',  note: '→ tokens distributed'    },
+                    ].map(item => (
+                      <div key={item.fn} className="flex items-center gap-3">
+                        <span className={`${item.color} w-40 shrink-0`}>{item.fn}</span>
+                        <span className="text-white/22">{item.note}</span>
+                      </div>
+                    ))}
+                    <div className="pt-3 mt-1 border-t border-white/8 text-white/20">
+                      human contributor · AI agent · same endpoint
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+            </div>
           </div>
 
           <div className="grid sm:grid-cols-3 gap-4">
@@ -1817,100 +1881,129 @@ export default function App() {
             </div>
           </div>
 
-          {/* Settlement → Payment bridge */}
+          {/* Record first. Share when ready. */}
           <div className="mb-16">
-            <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">From covenant to payout</p>
-            <p className="text-xs text-gray-400 mb-8">
-              Ink tokens are proportional claims. When the Covenant settles, each contributor's token share determines their cut of the pool — whether that's a project budget, ongoing revenue, or an on-chain contract.
+            <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Record first. Share when ready.</p>
+            <p className="text-xs text-gray-400 mb-8 max-w-2xl leading-relaxed">
+              ACP doesn't require anyone to deposit crypto or commit funds upfront. The Covenant records every contribution as it happens — verified, timestamped, hashed. When profit exists, the owner shares it using ink tokens as the distribution formula. That's it.
             </p>
 
-            {/* Example calculation */}
-            <div className="mb-8 p-5 rounded-xl border border-amber-900/40 bg-amber-950/15 font-mono text-xs">
-              <p className="text-amber-400/60 mb-3 uppercase tracking-widest text-[10px]">Example — $10,000 USDC pool</p>
-              <div className="space-y-2">
-                {[
-                  { name: 'Architect', ink: '2,580', pct: '32%', payout: '$3,200' },
-                  { name: 'Builder',   ink: '1,920', pct: '24%', payout: '$2,400' },
-                  { name: 'Auditor',   ink: '1,440', pct: '18%', payout: '$1,800' },
-                  { name: 'Catalyst',  ink: '960',   pct: '12%', payout: '$1,200' },
-                  { name: 'Others',    ink: '1,100', pct: '14%', payout: '$1,400' },
-                ].map(row => (
-                  <div key={row.name} className="flex items-center gap-3">
-                    <span className="text-white/40 w-20">{row.name}</span>
-                    <span className="text-amber-400/50 w-16">{row.ink} ink</span>
-                    <div className="flex-1 bg-white/5 rounded-full h-1.5 overflow-hidden">
-                      <div className="h-full bg-amber-400/50 rounded-full" style={{ width: row.pct }} />
+            {/* Flow: work → record → share */}
+            <div className="mb-10 flex flex-col sm:flex-row items-stretch gap-0">
+              {[
+                { step: '01', label: 'Work happens',     desc: 'Contributors propose, vote, and build. Every action recorded in the append-only hash chain.',    color: 'border-violet-800/50 bg-violet-950/20', accent: 'text-violet-400' },
+                { step: '02', label: 'Covenant settles', desc: 'Owner calls settle(). Ink token totals are locked — the permanent, verifiable record of contribution weight.', color: 'border-sky-800/50 bg-sky-950/20',    accent: 'text-sky-400'    },
+                { step: '03', label: 'Share when ready', desc: 'Whenever revenue exists — use the settled ink percentages to distribute. Any amount. Any currency. Any time.', color: 'border-amber-800/50 bg-amber-950/20', accent: 'text-amber-400'  },
+              ].map((s, i) => (
+                <div key={s.step} className="flex sm:flex-col flex-1">
+                  <div className={`flex-1 p-5 rounded-xl border ${s.color} flex flex-col gap-2`}>
+                    <div className="flex items-center gap-2">
+                      <span className={`text-[10px] font-mono font-semibold ${s.accent}`}>{s.step}</span>
+                      <span className="text-sm font-semibold text-gray-100">{s.label}</span>
                     </div>
-                    <span className="text-amber-300 w-14 text-right">{row.payout}</span>
+                    <p className="text-xs text-gray-400 leading-relaxed">{s.desc}</p>
                   </div>
-                ))}
-              </div>
-              <div className="mt-4 pt-3 border-t border-white/8 flex items-center gap-2 text-green-400 text-[11px]">
-                <span>✓</span>
-                <span>settle() called · hash chain verified · payouts distributed</span>
-              </div>
+                  {i < 2 && <div className="hidden sm:flex items-center justify-center w-6 shrink-0 text-white/15 text-lg">›</div>}
+                </div>
+              ))}
             </div>
 
-            {/* Three payment models */}
-            <div className="grid sm:grid-cols-3 gap-4 mb-6">
+            {/* Three paths to payment */}
+            <p className="text-xs font-semibold uppercase tracking-widest text-gray-500 mb-4">Three ways to share profit</p>
+            <div className="grid sm:grid-cols-3 gap-4 mb-10">
               {[
                 {
-                  phase: 'Phase 1 · Live',
-                  model: 'Fixed pool',
+                  icon: '◎',
+                  label: 'Share product revenue',
                   color: 'green',
-                  desc: 'Owner deposits a budget (USDC, ETH, or fiat) before work starts. Settlement distributes proportionally. ACP hash chain is the audit proof.',
-                  example: 'Client pays $10k → contributors split by ink share.',
+                  desc: 'Product earns revenue. Owner decides to share a percentage with contributors. Ink token share determines each contributor\'s cut — no negotiation, no spreadsheet.',
+                  note: 'Works with any payment: crypto, USDC, fiat bank transfer.',
                 },
                 {
-                  phase: 'Phase 2 · Planned',
-                  model: 'Revenue share',
-                  color: 'yellow',
-                  desc: 'Product earns ongoing revenue. A percentage flows into the Covenant pool monthly. Contributors earn as the product earns — proportional to lifetime ink.',
-                  example: '20% of MRR → quarterly settlement to all contributors.',
+                  icon: '◈',
+                  label: 'Invite sponsors',
+                  color: 'blue',
+                  desc: 'Show the verified Covenant to open-source sponsors, grants, or investors. The tamper-evident record proves exactly what was built, by whom, and at what tier. Sponsors fund the pool; ink tokens determine the split.',
+                  note: 'GitHub Sponsors, OpenCollective, DAO grants — any source.',
                 },
                 {
-                  phase: 'Phase 3 · Roadmap',
-                  model: 'On-chain escrow',
+                  icon: '▦',
+                  label: 'On-chain trustless',
                   color: 'gray',
-                  desc: 'Smart contract holds the pool. ACP Merkle root posted on-chain. settle() triggers automatic ERC-20 transfer — no owner can withhold payment.',
-                  example: 'Trustless. No intermediary. Self-executing.',
+                  desc: 'Smart contract holds the pool. ACP Merkle root posted on-chain. settle() triggers automatic ERC-20 transfer — no owner needs to initiate. The covenant enforces it.',
+                  note: 'Phase 7 roadmap — fully trustless, self-executing.',
                 },
               ].map(m => (
-                <FadeIn key={m.model}>
+                <FadeIn key={m.label}>
                   <div className={`p-5 rounded-xl border h-full flex flex-col gap-3 ${
-                    m.color === 'green'  ? 'border-green-900/50 bg-green-950/15' :
-                    m.color === 'yellow' ? 'border-yellow-900/50 bg-yellow-950/15' :
-                    'border-gray-700/50 bg-gray-900/30'
+                    m.color === 'green' ? 'border-green-900/50 bg-green-950/15 dark:bg-green-950/10' :
+                    m.color === 'blue'  ? 'border-sky-900/50 bg-sky-950/15 dark:bg-sky-950/10' :
+                    'border-gray-700/40 bg-gray-900/20'
                   }`}>
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <span className={`text-[9px] font-semibold px-1.5 py-0.5 rounded-full uppercase tracking-widest ${
-                        m.color === 'green'  ? 'bg-green-900/60 text-green-400' :
-                        m.color === 'yellow' ? 'bg-yellow-900/60 text-yellow-400' :
-                        'bg-gray-800 text-gray-500'
-                      }`}>{m.phase}</span>
-                    </div>
-                    <p className="text-sm font-semibold text-gray-100">{m.model}</p>
+                    <span className={`text-xl font-mono ${
+                      m.color === 'green' ? 'text-green-500/60' :
+                      m.color === 'blue'  ? 'text-sky-500/60' :
+                      'text-gray-600'
+                    }`}>{m.icon}</span>
+                    <p className="text-sm font-semibold text-gray-100">{m.label}</p>
                     <p className="text-xs text-gray-400 leading-relaxed flex-1">{m.desc}</p>
-                    <p className="text-[11px] font-mono text-gray-500 border-t border-white/5 pt-3">{m.example}</p>
+                    <p className={`text-[11px] font-mono border-t border-white/5 pt-3 ${
+                      m.color === 'green' ? 'text-green-500/50' :
+                      m.color === 'blue'  ? 'text-sky-500/50' :
+                      'text-gray-600'
+                    }`}>{m.note}</p>
                   </div>
                 </FadeIn>
               ))}
             </div>
 
-            {/* Token meaning ladder */}
-            <div className="p-5 rounded-xl border border-white/6 bg-white/2">
-              <p className="text-xs font-semibold uppercase tracking-widest text-gray-500 mb-4">What the token stands for</p>
-              <div className="space-y-3">
+            {/* Example split */}
+            <div className="p-5 rounded-xl border border-amber-900/40 bg-amber-950/10 font-mono text-xs mb-6">
+              <p className="text-amber-400/50 mb-4 uppercase tracking-widest text-[10px]">Example — $8,000 revenue distributed by ink share</p>
+              <div className="space-y-2.5">
                 {[
-                  { stage: 'Now',      meaning: 'Verified contribution receipt',      note: 'Tamper-evident proof of work — not yet transferable', color: 'text-green-400' },
-                  { stage: 'Phase 2',  meaning: 'Proportional claim on revenue pool', note: 'Owner-funded or product-revenue-funded',              color: 'text-yellow-400' },
-                  { stage: 'Phase 3',  meaning: 'On-chain enforceable payout',        note: 'Smart contract escrow, trustless settlement',        color: 'text-blue-400' },
-                  { stage: 'Phase 4+', meaning: 'Transferable credential or equity',  note: 'Soulbound reputation or fungible asset — TBD',       color: 'text-violet-400' },
+                  { name: 'Architect', ink: '2,580', pct: '32%', payout: '$2,560' },
+                  { name: 'Builder',   ink: '1,920', pct: '24%', payout: '$1,920' },
+                  { name: 'Auditor',   ink: '1,440', pct: '18%', payout: '$1,440' },
+                  { name: 'Catalyst',  ink: '960',   pct: '12%', payout: '$960'   },
+                  { name: 'Others',    ink: '1,100', pct: '14%', payout: '$1,120' },
                 ].map(row => (
-                  <div key={row.stage} className="flex items-start gap-4 text-xs">
-                    <span className={`font-mono font-semibold w-16 shrink-0 pt-0.5 ${row.color}`}>{row.stage}</span>
-                    <span className="text-gray-300 w-52 shrink-0">{row.meaning}</span>
-                    <span className="text-gray-500 leading-relaxed">{row.note}</span>
+                  <div key={row.name} className="flex items-center gap-3">
+                    <span className="text-white/35 w-20 shrink-0">{row.name}</span>
+                    <span className="text-amber-400/40 w-16 shrink-0">{row.ink} ink</span>
+                    <div className="flex-1 bg-white/5 rounded-full h-1 overflow-hidden">
+                      <div className="h-full bg-amber-400/40 rounded-full" style={{ width: row.pct }} />
+                    </div>
+                    <span className="text-amber-300/80 w-14 text-right shrink-0">{row.payout}</span>
+                  </div>
+                ))}
+              </div>
+              <div className="mt-4 pt-3 border-t border-white/8 flex flex-wrap gap-x-4 gap-y-1 text-[10px]">
+                <span className="text-green-400/70">✓ hash chain verified</span>
+                <span className="text-white/20">· no upfront deposit required ·</span>
+                <span className="text-white/20">distribute whenever revenue exists</span>
+              </div>
+            </div>
+
+            {/* Ink token evolution */}
+            <div className="p-5 rounded-xl border border-white/6 bg-white/2 dark:bg-black/20">
+              <p className="text-xs font-semibold uppercase tracking-widest text-gray-500 mb-5">What ink tokens represent — over time</p>
+              <div className="space-y-4">
+                {[
+                  { stage: 'Now',      dot: 'bg-green-400',  meaning: 'Verified contribution receipt', note: 'Tamper-evident proof of work — who built what, at what tier, accepted by the owner.' },
+                  { stage: 'Phase 2',  dot: 'bg-yellow-400', meaning: 'Distribution key for profit sharing', note: 'When revenue exists, ink percentage = payout percentage. Owner-initiated, any currency.' },
+                  { stage: 'Phase 3',  dot: 'bg-sky-400',    meaning: 'Sponsor-verified credential', note: 'Open the Covenant to funders. Ink history proves contributor value to external sponsors.' },
+                  { stage: 'Phase 7+', dot: 'bg-violet-400', meaning: 'On-chain enforceable payout', note: 'Smart contract holds escrow. Merkle root on-chain. Trustless, automatic, permissionless.' },
+                ].map(row => (
+                  <div key={row.stage} className="flex items-start gap-3 text-xs">
+                    <div className="flex items-center gap-2 w-20 shrink-0 pt-0.5">
+                      <span className={`w-2 h-2 rounded-full shrink-0 ${row.dot}`} />
+                      <span className="font-mono font-semibold text-gray-400">{row.stage}</span>
+                    </div>
+                    <div>
+                      <p className="text-gray-200 font-medium mb-0.5">{row.meaning}</p>
+                      <p className="text-gray-500 leading-relaxed">{row.note}</p>
+                    </div>
                   </div>
                 ))}
               </div>

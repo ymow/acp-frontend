@@ -1952,7 +1952,7 @@ export default function App() {
             <div className="space-y-3">
               {[
                 { layer:'Layer 1', name:'Hash Chain',  status:'Live',    desc:'Append-only SHA-256 chain on your own server. Tamper-evident. Trust the server owner. No blockchain required.',  color:'green' },
-                { layer:'Layer 2', name:'Git Anchor',  status:'Phase 3', desc:'Settlement hash committed to the git repo. Public, permanent proof tied to code history. Trust git history.', color:'yellow' },
+                { layer:'Layer 2', name:'Git Anchor',  status:'Phase 3', desc:'Settlement hash committed to the git repo as a signed commit. If the server is ever deleted or tampered with, the git history independently proves the settlement hash existed at that point in time. Trust git history, not the server owner.', color:'yellow' },
                 { layer:'Layer 3', name:'On-chain',    status:'Phase 7', desc:'Merkle root on a public blockchain. Trustless, permissionless verification. No trust required.',                color:'gray'   },
               ].map(v => (
                 <div key={v.layer} className="flex gap-4 p-4 rounded-lg border border-gray-100 dark:border-gray-700">
@@ -1991,8 +1991,12 @@ export default function App() {
           </div>
 
           <div className="mb-16">
-            <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">First settled Covenant</p>
-            <p className="text-xs text-gray-400 mb-6">Token distribution visualised — hover a slice to inspect.</p>
+            <div className="flex items-baseline gap-3 mb-1">
+              <p className="text-sm font-medium text-gray-700 dark:text-gray-300">First settled Covenant</p>
+              <span className="font-mono text-[10px] text-gray-400">cvnt_a54e1c43 · 2026-04-15</span>
+              <span className="text-[10px] text-green-500 font-medium">✓ verified</span>
+            </div>
+            <p className="text-xs text-gray-400 mb-6">Real settlement data from acp-server. Token distribution visualised — hover a slice to inspect.</p>
             <SettlementDonut />
           </div>
 
@@ -2040,7 +2044,7 @@ export default function App() {
               {[
                 { step: '01', label: 'Work happens',     desc: 'Contributors propose and build. Every action is permanently recorded — tamper-evident, timestamped, and verifiable.',    color: 'border-violet-800/50 bg-violet-950/20', accent: 'text-violet-400' },
                 { step: '02', label: 'Covenant settles', desc: 'Owner generates and confirms settlement. Ink token totals lock into the permanent record of contribution weight.', color: 'border-sky-800/50 bg-sky-950/20', accent: 'text-sky-400', detail: 'generate_settlement_output() → confirm_settlement_output()' },
-                { step: '03', label: 'Share when ready', desc: 'Whenever revenue exists — use the settled ink percentages to distribute. Any amount. Any currency. Any time. Three ways to do this below.', color: 'border-amber-800/50 bg-amber-950/20', accent: 'text-amber-400'  },
+                { step: '03', label: 'Share when ready', desc: 'Whenever revenue exists — export the settlement JSON from acp-server, read each contributor\'s ink percentage, and distribute by that share. Bank transfer, crypto, USDC — any payment rail. ACP calculates the split; you execute the payment.', color: 'border-amber-800/50 bg-amber-950/20', accent: 'text-amber-400'  },
               ].map((s, i) => (
                 <div key={s.step} className="flex sm:flex-col flex-1">
                   <div className={`flex-1 p-5 rounded-xl border ${s.color} flex flex-col gap-2`}>

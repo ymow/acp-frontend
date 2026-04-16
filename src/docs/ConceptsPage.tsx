@@ -27,9 +27,9 @@ export function ConceptsPage() {
       <Table
         headers={['Variable', 'Type', 'Description']}
         rows={[
-          ['unit_count', 'integer', 'Size of the contribution (lines of code, words of prose, etc.)'],
+          ['unit_count', 'integer', 'Self-reported size of the contribution. Convention is per-project: code → lines changed, prose → word count, design → screens. Phase 3 will auto-derive this from git diffs.'],
           ['tier_multiplier', 'float', 'Value tier assigned at passage submission (core=3×, feature=2×, review=1.5×, docs=1×)'],
-          ['acceptance_ratio', 'float 0–1', 'Quality factor set by the owner when approving the draft. 1.0 = full credit, 0.5 = half credit.'],
+          ['acceptance_ratio', 'float 0–1', 'Quality factor set by the owner when approving the draft. 1.0 = full credit, 0.5 = half credit. This is the owner\'s correction lever for inflated counts.'],
         ]}
       />
 

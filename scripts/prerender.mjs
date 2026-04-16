@@ -1,12 +1,13 @@
-/**
- * Post-build SSG script.
- * Uses Vite's ssrLoadModule to render App to HTML, then injects it into dist/index.html.
- * Three.js / D3 / Canvas components render null (ClientOnly wrappers).
- * All text content — FAQ, steps, formula, sections — becomes real static HTML.
- */
+// Post-build SSG script.
+// Uses Vite's ssrLoadModule to render each route to HTML, then writes:
+//   / → dist/index.html
+//   /docs → dist/docs/index.html
+//   /docs/quickstart → dist/docs/quickstart/index.html  (etc.)
+// Three.js / D3 / Canvas components render null (ClientOnly wrappers).
+// All text content — FAQ, steps, formula, doc pages — becomes real static HTML.
 import { createServer } from 'vite'
-import { readFileSync, writeFileSync } from 'node:fs'
-import { resolve } from 'node:path'
+import { readFileSync, writeFileSync, mkdirSync } from 'node:fs'
+import { resolve, dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 const __dirname = fileURLToPath(new URL('.', import.meta.url))
@@ -59,6 +60,15 @@ def('HTMLCanvasElement', { prototype: {} })
 def('WebGLRenderingContext', {})
 def('location', { href: '' })
 
+const ROUTES = [
+  '/',
+  '/docs',
+  '/docs/quickstart',
+  '/docs/concepts',
+  '/docs/api',
+  '/docs/mcp',
+]
+
 const vite = await createServer({
   root,
   server: { middlewareMode: true },
@@ -69,14 +79,25 @@ const vite = await createServer({
 
 try {
   const { render } = await vite.ssrLoadModule('/src/entry-server.tsx')
-  const appHtml = render()
+  const template = readFileSync(resolve(root, 'dist/index.html'), 'utf-8')
 
-  const templatePath = resolve(root, 'dist/index.html')
-  let template = readFileSync(templatePath, 'utf-8')
-  template = template.replace('<div id="root"></div>', `<div id="root">${appHtml}</div>`)
-  writeFileSync(templatePath, template)
+  for (const route of ROUTES) {
+    const appHtml = render(route)
+    const html = template.replace('<div id="root"></div>', `<div id="root">${appHtml}</div>`)
 
-  console.log('✓ Pre-rendered HTML injected into dist/index.html')
+    if (route === '/') {
+      writeFileSync(resolve(root, 'dist/index.html'), html)
+      console.log('✓ /')
+    } else {
+      // e.g. /docs/quickstart → dist/docs/quickstart/index.html
+      const outDir = resolve(root, 'dist' + route)
+      mkdirSync(outDir, { recursive: true })
+      writeFileSync(resolve(outDir, 'index.html'), html)
+      console.log(`✓ ${route}`)
+    }
+  }
+
+  console.log(`\n✓ Pre-rendered ${ROUTES.length} routes`)
 } finally {
   await vite.close()
 }

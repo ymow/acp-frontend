@@ -1528,6 +1528,7 @@ const NAV_LINKS = [
   { label:'Why',    href:'#why' },
   { label:'How',    href:'#how' },
   { label:'Vision', href:'#vision' },
+  { label:'Docs',   href:'/docs' },
 ]
 
 const TIERS = [

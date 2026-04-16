@@ -519,7 +519,7 @@ const ACTS = [
       'Builder    [core    3×]  ·  1,920 tokens  ·  verified',
       'Auditor    [review  2×]  ·  1,440 tokens  ·  verified',
       '',
-      'Fair by design. Trustless settlement.',
+      'Fair by design. Formula-based settlement.',
       'No gatekeepers. No guesswork.',
     ],
     accent: '#f59e0b',
@@ -1554,11 +1554,11 @@ const PRINCIPLES = [
 ]
 
 const SETTLEMENT = [
-  ['Tyrion', 'core',    '2,580 ink'],
-  ['Arya',   'core',    '720 ink'],
-  ['Stannis','review',  '465 ink'],
-  ['Jon',    'feature', '360 ink'],
-  ['Sansa',  'docs',    '350 ink'],
+  ['Protocol Engineer', 'core',    '2,580 ink'],
+  ['Security Auditor',  'core',    '720 ink'],
+  ['Code Reviewer',     'review',  '465 ink'],
+  ['Feature Engineer',  'feature', '360 ink'],
+  ['Technical Writer',  'docs',    '350 ink'],
 ]
 
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -1583,7 +1583,7 @@ export default function App() {
             <Button
               onPress={() => window.open('https://github.com/ymow/acp-server','_blank')}
               className="text-sm px-3 py-1.5 rounded-md border border-white/15 text-white/80 font-medium hover:bg-white/8 transition-colors outline-none focus-visible:ring-2 focus-visible:ring-violet-500 cursor-pointer">
-              GitHub
+              acp-server →
             </Button>
           </div>
         </nav>
@@ -1600,7 +1600,7 @@ export default function App() {
         <div className="relative z-[2] max-w-5xl mx-auto px-6 py-28 text-center">
           <div className="inline-flex items-center gap-2 text-xs font-medium text-violet-300 bg-violet-950/60 border border-violet-700/50 rounded-full px-3 py-1 mb-8">
             <span className="w-1.5 h-1.5 rounded-full bg-violet-400 animate-pulse" />
-            Fair by design · Trustless settlement · No gatekeepers
+            Formula-based settlement · Open source · No central platform
           </div>
 
           <h1 className="text-5xl sm:text-6xl lg:text-7xl font-semibold tracking-tight leading-[1.05] mb-6 text-white">
@@ -1626,8 +1626,11 @@ export default function App() {
 
           {/* Settlement proof */}
           <div className="mt-16 p-5 rounded-xl border border-white/8 bg-white/4 backdrop-blur-sm font-mono text-xs text-left max-w-lg mx-auto">
-            <div className="text-white/30 mb-3">{'// First real Covenant — SETTLED 2026-04-15'}</div>
-            <div className="text-white/18 mb-3 text-[10px]">{'// ink = verified contribution token · determines payout share'}</div>
+            <div className="flex items-center justify-between mb-1">
+              <span className="text-white/30">{'// acp-server development · cvnt_a54e1c43'}</span>
+              <span className="text-[9px] text-violet-400/60 border border-violet-400/20 px-1.5 py-0.5 rounded">SETTLED</span>
+            </div>
+            <div className="text-white/18 mb-3 text-[10px]">{'// 2026-04-15 · ink = contribution unit, not a cryptocurrency'}</div>
             <div className="space-y-1">
               {SETTLEMENT.map(([name, tier, tokens]) => (
                 <div key={name} className="flex justify-between">
@@ -1639,7 +1642,10 @@ export default function App() {
                 <span>total</span><span>4,475 ink</span>
               </div>
             </div>
-            <div className="mt-3 text-green-400 text-[11px]">✓ audit hash chain valid</div>
+            <div className="mt-3 flex items-center justify-between">
+              <span className="text-green-400 text-[11px]">✓ audit hash chain valid · SHA-256 · not a blockchain</span>
+            </div>
+            <div className="mt-2 text-white/18 text-[10px]">{'// settlement = verified record · financial distribution is owner-initiated'}</div>
           </div>
         </div>
       </section>
@@ -1725,9 +1731,22 @@ export default function App() {
             <p className="text-gray-500 dark:text-gray-400 leading-relaxed mb-4">
               When multiple people — or agents — collaborate on a project, no existing tool automatically answers: <em>who contributed how much, and what do they deserve?</em>
             </p>
-            <p className="text-gray-500 dark:text-gray-400 leading-relaxed">
+            <p className="text-gray-500 dark:text-gray-400 leading-relaxed mb-4">
               Salaries are private. Git blame is incomplete. Token airdrops are arbitrary. ACP solves this with a public, verifiable formula — agreed upon before work begins, not negotiated after.
             </p>
+            <div className="flex flex-wrap gap-2 text-[11px]">
+              {[
+                { label: 'Not a blockchain', note: 'SHA-256 hash chain on your own server' },
+                { label: 'Ink ≠ cryptocurrency', note: 'Non-transferable contribution unit' },
+                { label: 'Open source · MIT', note: 'Self-hosted, zero lock-in' },
+              ].map(tag => (
+                <span key={tag.label} className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400">
+                  <span className="font-medium text-gray-700 dark:text-gray-300">{tag.label}</span>
+                  <span className="text-gray-400 dark:text-gray-600">·</span>
+                  <span>{tag.note}</span>
+                </span>
+              ))}
+            </div>
           </div>
 
           {/* Covenant + MCP — premium two-panel explainer */}
@@ -1778,7 +1797,7 @@ export default function App() {
                     Any agent joins<br />as a standard tool call.
                   </h3>
                   <p className="text-sm text-white/45 leading-relaxed mb-6">
-                    ACP exposes MCP-compatible endpoints. Claude, GPT, or any custom agent connects in minutes — calling the same protocol as every human contributor. Same rules. Same token formula.
+                    ACP exposes endpoints compatible with <span className="text-white/65">Anthropic's Model Context Protocol (MCP)</span> — the open standard for AI tool use. Claude Code, Cursor, GPT-4o, Gemini, Qwen, Ollama: any MCP client connects in minutes and calls the same interfaces as every human contributor. Same rules. Same token formula.
                   </p>
                   <div className="rounded-xl bg-black/40 border border-white/8 p-4 font-mono text-xs space-y-2">
                     <p className="text-white/20 mb-3">{'// Agent participates via MCP tool call'}</p>

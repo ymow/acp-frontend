@@ -2053,10 +2053,11 @@ export default function App() {
 
           <div className="mb-16">
             <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Contribution tiers</p>
-            <p className="text-xs text-gray-400 mb-4">
-              Each tier sets the <span className="font-mono text-violet-500 dark:text-violet-400">tier_multiplier</span> in the settlement formula:{' '}
-              <span className="font-mono text-gray-600 dark:text-gray-300">tokens = unit_count × tier_multiplier × acceptance_ratio</span>.
-              Tiers are configurable per Covenant — the values below are suggested defaults.
+            <p className="text-xs text-gray-400 mb-2">
+              Each tier sets the <span className="font-mono text-violet-500 dark:text-violet-400">tier_multiplier</span> in the settlement formula. Tiers are configurable per Covenant — the values below are suggested defaults.
+            </p>
+            <p className="font-mono text-[11px] text-gray-500 dark:text-gray-400 break-all mb-4">
+              tokens = unit_count × tier_multiplier × acceptance_ratio
             </p>
             <div className="grid sm:grid-cols-4 gap-3">
               {TIERS.map(t => (
@@ -2093,7 +2094,7 @@ export default function App() {
                     </div>
                     <p className="text-xs text-gray-400 leading-relaxed">{s.desc}</p>
                     {'detail' in s && s.detail && (
-                      <p className="text-[10px] font-mono text-white/20 mt-1">{s.detail}</p>
+                      <p className="text-[10px] font-mono text-white/30 mt-1 break-all">{s.detail}</p>
                     )}
                   </div>
                   {i < 2 && <div className="hidden sm:flex items-center justify-center w-6 shrink-0 text-white/15 text-lg">›</div>}

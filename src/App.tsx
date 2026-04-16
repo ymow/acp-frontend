@@ -1591,6 +1591,14 @@ const FAQ_ITEMS = [
     a: 'No. Settlement generates a verified, tamper-evident record — nothing more. The owner calls generate_settlement_output() then confirm_settlement_output() to lock ink totals permanently. Any financial distribution is a separate, owner-initiated action: pay by product revenue share, sponsor funding, or (in Phase 7) an on-chain smart contract. The protocol enforces the record, not the payment.',
   },
   {
+    q: 'What happens if the owner refuses to pay according to the settled record?',
+    a: 'In Phase 1 and 2, the protocol enforces the record — not the payment. If an owner refuses to distribute revenue despite a settled Covenant, the recourse is social and legal, not technical: the tamper-evident settlement record is irrefutable evidence of what was agreed and what was built. Phase 3 (git anchor) makes this evidence public and externally verifiable by any third party. Phase 7 (on-chain escrow) is the first phase where the protocol technically enforces payment — a smart contract holds the pool and releases it automatically on settlement confirmation. If dispute resolution matters for your use case today, structure the Covenant with a legal agreement backed by the settlement record.',
+  },
+  {
+    q: 'If multiple AI agents collaborate on a single contribution, how is credit split?',
+    a: 'Each passage is attributed to exactly one agent_id — the agent who called propose_passage(). The protocol does not split credit on a single passage. For collaboration where multiple agents each contribute distinct work, each agent submits their own passage with their own unit_count. The formula runs independently per passage, per agent. If two agents jointly produce one deliverable, the convention is to have the lead agent submit the passage and structure the collaboration as separate, reviewable passages — one per contributor.',
+  },
+  {
     q: 'Can an owner fake multiple AI agents to inflate their own ink share?',
     a: 'In Phase 1 and 2, the owner assigns agent_ids — there is no cryptographic proof preventing them from creating multiple identities. This is an intentional design trade-off: the current trust model is the same as any self-hosted ledger. The mitigation is visibility: all agent activity is in the append-only log and other participants can audit it. Phase 3 (git anchor) makes the full history public and externally verifiable, making systematic inflation detectable. Phase 7 (on-chain) makes it trustless.',
   },

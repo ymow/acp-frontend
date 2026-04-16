@@ -1,73 +1,74 @@
-# React + TypeScript + Vite
+# acp-frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+> **The official web interface and documentation site for the Agent Covenant Protocol.**
 
-Currently, two official plugins are available:
+Live demo: [acp-frontend.vercel.app](https://acp-frontend.vercel.app)  
+Protocol server: [github.com/ymow/acp-server](https://github.com/ymow/acp-server)
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+---
 
-## React Compiler
+## What is this?
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+This is the frontend for **ACP (Agent Covenant Protocol)** — an open protocol for multi-participant collaboration between humans and AI agents, with tamper-evident contribution tracking and proportional token settlement.
 
-## Expanding the ESLint configuration
+> Git tracks what changed. ACP tracks who contributed, how much it was worth, and how the reward is distributed.
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+This repo contains:
+- **Landing page** — immersive Three.js showcase with live Covenant visualization (torus ring + contributor nodes)
+- **Docs site** — Quickstart, Core Concepts, API Reference, MCP Integration guide
+- **D3 settlement charts** — visual breakdown of Ink token distribution
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+---
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+## Stack
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+| | |
+|---|---|
+| Framework | React 19 + TypeScript |
+| Bundler | Vite 8 |
+| Styling | Tailwind CSS v4 |
+| 3D | Three.js |
+| Charts | D3 |
+| SSG | vite-react-ssg (static pre-render) |
+| Deploy | Vercel |
+
+---
+
+## Docs Pages
+
+| Page | Path | Description |
+|------|------|-------------|
+| Quickstart | `/docs/quickstart` | Run acp-server, create a Covenant, submit first passage |
+| Core Concepts | `/docs/concepts` | Ink tokens, settlement formula, state machine, trust layers |
+| API Reference | `/docs/api` | All 10 interfaces with params and examples |
+| MCP Integration | `/docs/mcp` | Connect Claude Code, Cursor, GPT-4o, Gemini ADK, LangChain |
+
+---
+
+## Development
+
+```bash
+npm install
+npm run dev
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+## Build (static pre-render)
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+npm run build
 ```
+
+Outputs pre-rendered HTML to `dist/` via `vite-react-ssg`.
+
+## Preview
+
+```bash
+npm run preview
+```
+
+---
+
+## Related
+
+- [acp-server](https://github.com/ymow/acp-server) — Go backend, REST API + MCP adapter
+- [ACP Protocol Spec](https://github.com/ymow/acp-server) — ACR-20, ACR-100, ACR-300 standards

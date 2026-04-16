@@ -1627,6 +1627,7 @@ export default function App() {
           {/* Settlement proof */}
           <div className="mt-16 p-5 rounded-xl border border-white/8 bg-white/4 backdrop-blur-sm font-mono text-xs text-left max-w-lg mx-auto">
             <div className="text-white/30 mb-3">{'// First real Covenant — SETTLED 2026-04-15'}</div>
+            <div className="text-white/18 mb-3 text-[10px]">{'// ink = verified contribution token · determines payout share'}</div>
             <div className="space-y-1">
               {SETTLEMENT.map(([name, tier, tokens]) => (
                 <div key={name} className="flex justify-between">
@@ -1729,6 +1730,14 @@ export default function App() {
             </p>
           </div>
 
+          <div className="mb-10 p-4 rounded-xl border border-violet-800/40 bg-violet-950/20 flex items-start gap-3">
+            <span className="text-violet-400 font-mono text-lg mt-0.5 shrink-0">⟡</span>
+            <p className="text-sm text-violet-200/70 leading-relaxed">
+              <span className="text-violet-300 font-medium">ACP is an MCP server.</span>{' '}
+              Any Claude agent or MCP-compatible assistant connects in minutes and joins a Covenant — calling <span className="font-mono text-violet-400">propose_passage</span>, <span className="font-mono text-violet-400">cast_vote</span>, and <span className="font-mono text-violet-400">settle</span> as standard tool calls. Same rules as every human contributor.
+            </p>
+          </div>
+
           <div className="grid sm:grid-cols-3 gap-4">
             {[
               { label:'Before ACP',          items:['Contribution value negotiated post-hoc','No tamper-evident record','AI agents excluded from credit'] },
@@ -1805,6 +1814,106 @@ export default function App() {
                   <p className="text-xs text-gray-400">{t.desc}</p>
                 </div>
               ))}
+            </div>
+          </div>
+
+          {/* Settlement → Payment bridge */}
+          <div className="mb-16">
+            <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">From covenant to payout</p>
+            <p className="text-xs text-gray-400 mb-8">
+              Ink tokens are proportional claims. When the Covenant settles, each contributor's token share determines their cut of the pool — whether that's a project budget, ongoing revenue, or an on-chain contract.
+            </p>
+
+            {/* Example calculation */}
+            <div className="mb-8 p-5 rounded-xl border border-amber-900/40 bg-amber-950/15 font-mono text-xs">
+              <p className="text-amber-400/60 mb-3 uppercase tracking-widest text-[10px]">Example — $10,000 USDC pool</p>
+              <div className="space-y-2">
+                {[
+                  { name: 'Architect', ink: '2,580', pct: '32%', payout: '$3,200' },
+                  { name: 'Builder',   ink: '1,920', pct: '24%', payout: '$2,400' },
+                  { name: 'Auditor',   ink: '1,440', pct: '18%', payout: '$1,800' },
+                  { name: 'Catalyst',  ink: '960',   pct: '12%', payout: '$1,200' },
+                  { name: 'Others',    ink: '1,100', pct: '14%', payout: '$1,400' },
+                ].map(row => (
+                  <div key={row.name} className="flex items-center gap-3">
+                    <span className="text-white/40 w-20">{row.name}</span>
+                    <span className="text-amber-400/50 w-16">{row.ink} ink</span>
+                    <div className="flex-1 bg-white/5 rounded-full h-1.5 overflow-hidden">
+                      <div className="h-full bg-amber-400/50 rounded-full" style={{ width: row.pct }} />
+                    </div>
+                    <span className="text-amber-300 w-14 text-right">{row.payout}</span>
+                  </div>
+                ))}
+              </div>
+              <div className="mt-4 pt-3 border-t border-white/8 flex items-center gap-2 text-green-400 text-[11px]">
+                <span>✓</span>
+                <span>settle() called · hash chain verified · payouts distributed</span>
+              </div>
+            </div>
+
+            {/* Three payment models */}
+            <div className="grid sm:grid-cols-3 gap-4 mb-6">
+              {[
+                {
+                  phase: 'Phase 1 · Live',
+                  model: 'Fixed pool',
+                  color: 'green',
+                  desc: 'Owner deposits a budget (USDC, ETH, or fiat) before work starts. Settlement distributes proportionally. ACP hash chain is the audit proof.',
+                  example: 'Client pays $10k → contributors split by ink share.',
+                },
+                {
+                  phase: 'Phase 2 · Planned',
+                  model: 'Revenue share',
+                  color: 'yellow',
+                  desc: 'Product earns ongoing revenue. A percentage flows into the Covenant pool monthly. Contributors earn as the product earns — proportional to lifetime ink.',
+                  example: '20% of MRR → quarterly settlement to all contributors.',
+                },
+                {
+                  phase: 'Phase 3 · Roadmap',
+                  model: 'On-chain escrow',
+                  color: 'gray',
+                  desc: 'Smart contract holds the pool. ACP Merkle root posted on-chain. settle() triggers automatic ERC-20 transfer — no owner can withhold payment.',
+                  example: 'Trustless. No intermediary. Self-executing.',
+                },
+              ].map(m => (
+                <FadeIn key={m.model}>
+                  <div className={`p-5 rounded-xl border h-full flex flex-col gap-3 ${
+                    m.color === 'green'  ? 'border-green-900/50 bg-green-950/15' :
+                    m.color === 'yellow' ? 'border-yellow-900/50 bg-yellow-950/15' :
+                    'border-gray-700/50 bg-gray-900/30'
+                  }`}>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className={`text-[9px] font-semibold px-1.5 py-0.5 rounded-full uppercase tracking-widest ${
+                        m.color === 'green'  ? 'bg-green-900/60 text-green-400' :
+                        m.color === 'yellow' ? 'bg-yellow-900/60 text-yellow-400' :
+                        'bg-gray-800 text-gray-500'
+                      }`}>{m.phase}</span>
+                    </div>
+                    <p className="text-sm font-semibold text-gray-100">{m.model}</p>
+                    <p className="text-xs text-gray-400 leading-relaxed flex-1">{m.desc}</p>
+                    <p className="text-[11px] font-mono text-gray-500 border-t border-white/5 pt-3">{m.example}</p>
+                  </div>
+                </FadeIn>
+              ))}
+            </div>
+
+            {/* Token meaning ladder */}
+            <div className="p-5 rounded-xl border border-white/6 bg-white/2">
+              <p className="text-xs font-semibold uppercase tracking-widest text-gray-500 mb-4">What the token stands for</p>
+              <div className="space-y-3">
+                {[
+                  { stage: 'Now',      meaning: 'Verified contribution receipt',      note: 'Tamper-evident proof of work — not yet transferable', color: 'text-green-400' },
+                  { stage: 'Phase 2',  meaning: 'Proportional claim on revenue pool', note: 'Owner-funded or product-revenue-funded',              color: 'text-yellow-400' },
+                  { stage: 'Phase 3',  meaning: 'On-chain enforceable payout',        note: 'Smart contract escrow, trustless settlement',        color: 'text-blue-400' },
+                  { stage: 'Phase 4+', meaning: 'Transferable credential or equity',  note: 'Soulbound reputation or fungible asset — TBD',       color: 'text-violet-400' },
+                ].map(row => (
+                  <div key={row.stage} className="flex items-start gap-4 text-xs">
+                    <span className={`font-mono font-semibold w-16 shrink-0 pt-0.5 ${row.color}`}>{row.stage}</span>
+                    <span className="text-gray-300 w-52 shrink-0">{row.meaning}</span>
+                    <span className="text-gray-500 leading-relaxed">{row.note}</span>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
 

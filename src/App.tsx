@@ -1,4 +1,4 @@
-import { useRef, useEffect, useState, type ReactNode } from 'react'
+import { useRef, useEffect, useState, Fragment, type ReactNode } from 'react'
 import { arc, pie, select, interpolate } from 'd3'
 import * as THREE from 'three'
 import { Button, Link } from 'react-aria-components'
@@ -2080,25 +2080,22 @@ export default function App() {
             </p>
 
             {/* Flow: work → record → share */}
-            <div className="mb-10 flex flex-col sm:flex-row items-stretch gap-0">
+            <div className="mb-10 flex flex-col sm:flex-row items-stretch gap-2 sm:gap-0">
               {[
-                { step: '01', label: 'Work happens',     desc: 'Contributors propose and build. Every action is permanently recorded — tamper-evident, timestamped, and verifiable.',    color: 'border-violet-800/50 bg-violet-950/20', accent: 'text-violet-400' },
-                { step: '02', label: 'Covenant settles', desc: 'Owner generates and confirms settlement. Ink token totals lock into the permanent record of contribution weight.', color: 'border-sky-800/50 bg-sky-950/20', accent: 'text-sky-400', detail: 'generate_settlement_output() → confirm_settlement_output()' },
-                { step: '03', label: 'Share when ready', desc: 'Whenever revenue exists — export the settlement JSON from acp-server, read each contributor\'s ink percentage, and distribute by that share. Bank transfer, crypto, USDC — any payment rail. ACP calculates the split; you execute the payment.', color: 'border-amber-800/50 bg-amber-950/20', accent: 'text-amber-400'  },
+                { step: '01', label: 'Work happens',     desc: 'Contributors propose and build. Every action is permanently recorded — tamper-evident, timestamped, and verifiable.', color: 'border-violet-800/50 bg-violet-950/20', accent: 'text-violet-400' },
+                { step: '02', label: 'Covenant settles', desc: 'Owner calls generate_settlement_output() then confirm_settlement_output(). Ink token totals lock permanently — immutable, hash-chain verified.', color: 'border-sky-800/50 bg-sky-950/20', accent: 'text-sky-400' },
+                { step: '03', label: 'Share when ready', desc: 'Whenever revenue exists, use each contributor\'s settled ink percentage as the split key. Any amount. Any currency. Any time.', color: 'border-amber-800/50 bg-amber-950/20', accent: 'text-amber-400' },
               ].map((s, i) => (
-                <div key={s.step} className="flex sm:flex-col flex-1">
+                <Fragment key={s.step}>
                   <div className={`flex-1 p-5 rounded-xl border ${s.color} flex flex-col gap-2`}>
                     <div className="flex items-center gap-2">
                       <span className={`text-[10px] font-mono font-semibold ${s.accent}`}>{s.step}</span>
                       <span className="text-sm font-semibold text-gray-100">{s.label}</span>
                     </div>
                     <p className="text-xs text-gray-400 leading-relaxed">{s.desc}</p>
-                    {'detail' in s && s.detail && (
-                      <p className="text-[10px] font-mono text-white/30 mt-1 break-all">{s.detail}</p>
-                    )}
                   </div>
-                  {i < 2 && <div className="hidden sm:flex items-center justify-center w-6 shrink-0 text-white/15 text-lg">›</div>}
-                </div>
+                  {i < 2 && <div className="hidden sm:flex items-center justify-center w-7 shrink-0 text-white/20 text-base">›</div>}
+                </Fragment>
               ))}
             </div>
 

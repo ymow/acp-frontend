@@ -1591,8 +1591,16 @@ const FAQ_ITEMS = [
     a: 'No. Settlement generates a verified, tamper-evident record — nothing more. The owner calls generate_settlement_output() then confirm_settlement_output() to lock ink totals permanently. Any financial distribution is a separate, owner-initiated action: pay by product revenue share, sponsor funding, or (in Phase 7) an on-chain smart contract. The protocol enforces the record, not the payment.',
   },
   {
+    q: 'Can an owner fake multiple AI agents to inflate their own ink share?',
+    a: 'In Phase 1 and 2, the owner assigns agent_ids — there is no cryptographic proof preventing them from creating multiple identities. This is an intentional design trade-off: the current trust model is the same as any self-hosted ledger. The mitigation is visibility: all agent activity is in the append-only log and other participants can audit it. Phase 3 (git anchor) makes the full history public and externally verifiable, making systematic inflation detectable. Phase 7 (on-chain) makes it trustless.',
+  },
+  {
+    q: 'If the server goes offline, do participants lose their proof of work?',
+    a: 'No — if participants export their settlement JSON from acp-server before it goes offline, they retain a tamper-evident record of their contributions and ink totals. In Phase 3, the settlement hash is committed to the project git repo, so even if the server is deleted entirely, the git history independently proves the settlement existed at that point in time. You do not need the server to remain online to prove what was built.',
+  },
+  {
     q: 'Is this live, or a prototype?',
-    a: 'ACP is live. Phase 1 and Phase 2 are complete. The first real Covenant was settled on 2026-04-15. The acp-server repository is MIT licensed and publicly available. You can run it today with a single binary and no external dependencies.',
+    a: 'ACP is live. Phase 1 and Phase 2 are complete. The first real Covenant was settled on 2026-04-15 (Covenant ID: cvnt_a54e1c43 — verifiable in the acp-server repository). The repository is MIT licensed and publicly available. You can run it today with a single binary and no external dependencies.',
   },
 ]
 
@@ -1891,8 +1899,11 @@ export default function App() {
                   <h3 className="text-xl sm:text-2xl font-semibold text-white leading-snug mb-4">
                     Any agent joins<br />as a standard tool call.
                   </h3>
-                  <p className="text-sm text-white/45 leading-relaxed mb-6">
-                    ACP exposes endpoints compatible with <span className="text-white/65">Anthropic's Model Context Protocol (MCP)</span> — the open standard for AI tool use. Claude Code, Cursor, GPT-4o, Gemini, Qwen, Ollama: any MCP client connects in minutes and calls the same interfaces as every human contributor. Same rules. Same token formula.
+                  <p className="text-sm text-white/45 leading-relaxed mb-3">
+                    acp-server ships a <span className="font-mono text-white/65">cmd/acp-mcp</span> binary that implements <span className="text-white/65">Anthropic's Model Context Protocol (MCP)</span> — the open standard for AI tool use. Add it to your Claude Code, Cursor, or any MCP client config and an AI agent can call <span className="font-mono text-white/65">propose_passage()</span> as a native tool function — no custom integration needed.
+                  </p>
+                  <p className="text-xs text-white/25 leading-relaxed mb-6">
+                    Compatible clients: Claude Code, Cursor, GPT-4o, Gemini, Qwen, Ollama. Same interfaces as every human contributor. Same rules. Same token formula.
                   </p>
                   <div className="rounded-xl bg-black/40 border border-white/8 p-4 font-mono text-xs space-y-2">
                     <p className="text-white/20 mb-3">{'// Agent participates via MCP tool call'}</p>

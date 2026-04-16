@@ -13,3 +13,8 @@ body {
   margin: 0;
   font-family: var(--sans);
 }
+
+@keyframes dotTravel {
+  from { transform: translateX(0) translateY(-50%); }
+  to   { transform: translateX(26px) translateY(-50%); }
+}

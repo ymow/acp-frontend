@@ -1612,7 +1612,7 @@ export default function App() {
             Record who built what. Distribute tokens by a public formula. Self-hosted, with no platform in the middle.
           </p>
 
-          <div className="flex flex-wrap items-center justify-center gap-3">
+          <div className="flex flex-wrap items-center justify-center gap-3 mb-10">
             <Button
               onPress={() => window.open('https://github.com/ymow/acp-server','_blank')}
               className="px-5 py-2.5 rounded-lg bg-violet-600 hover:bg-violet-700 text-white font-medium text-sm transition-colors outline-none focus-visible:ring-2 focus-visible:ring-violet-400 focus-visible:ring-offset-2 focus-visible:ring-offset-[#040410] cursor-pointer">
@@ -1622,6 +1622,21 @@ export default function App() {
               className="px-5 py-2.5 rounded-lg border border-white/15 text-sm font-medium text-white/70 hover:bg-white/5 transition-colors outline-none focus-visible:ring-2 focus-visible:ring-violet-500">
               See how it works
             </Link>
+          </div>
+
+          {/* Disambiguation row — kill crypto/blockchain assumption immediately */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 max-w-3xl mx-auto text-left">
+            {[
+              { icon: '✗', bad: 'Blockchain / DApp',   good: 'Self-hosted Go server',        color: 'border-white/6' },
+              { icon: '✗', bad: 'Crypto wallet needed', good: 'HTTP + MCP tool calls',         color: 'border-white/6' },
+              { icon: '✗', bad: 'Ink = cryptocurrency', good: 'Non-transferable unit',         color: 'border-white/6' },
+              { icon: '✗', bad: 'Settlement = payment', good: 'Settlement = verified record',  color: 'border-white/6' },
+            ].map(item => (
+              <div key={item.bad} className={`p-3 rounded-xl border ${item.color} bg-white/3`}>
+                <p className="text-[10px] text-red-400/50 line-through mb-1">{item.bad}</p>
+                <p className="text-[11px] text-white/60 font-medium leading-snug">{item.good}</p>
+              </div>
+            ))}
           </div>
 
           {/* Settlement proof */}
@@ -1848,7 +1863,35 @@ export default function App() {
       <section id="how" className="border-t border-gray-100 dark:border-gray-800">
         <div className="max-w-5xl mx-auto px-6 py-24">
           <p className="text-xs font-semibold uppercase tracking-widest text-violet-500 mb-4">How it works</p>
-          <h2 className="text-3xl sm:text-4xl font-semibold tracking-tight mb-16">Five steps, one formula.</h2>
+          <h2 className="text-3xl sm:text-4xl font-semibold tracking-tight mb-8">Five steps, one formula.</h2>
+
+          {/* How the record is secured — moved first because every reviewer asks */}
+          <div className="mb-16 p-6 rounded-xl border border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-900/40">
+            <p className="text-xs font-semibold uppercase tracking-widest text-gray-500 mb-1">How the record is secured</p>
+            <p className="text-xs text-gray-400 mb-5">ACP is not a blockchain. Choose your trust model based on what the collaboration needs.</p>
+            <div className="space-y-3">
+              {[
+                { layer:'Layer 1', name:'Hash Chain',  status:'Live',    desc:'Append-only SHA-256 chain on your own server. Tamper-evident. Trust the server owner. No blockchain required.',  color:'green' },
+                { layer:'Layer 2', name:'Git Anchor',  status:'Phase 3', desc:'Settlement hash committed to the git repo. Public, permanent proof tied to code history. Trust git history.', color:'yellow' },
+                { layer:'Layer 3', name:'On-chain',    status:'Phase 7', desc:'Merkle root on a public blockchain. Trustless, permissionless verification. No trust required.',                color:'gray'   },
+              ].map(v => (
+                <div key={v.layer} className="flex gap-4 p-4 rounded-lg border border-gray-100 dark:border-gray-700">
+                  <div className="w-16 shrink-0 text-xs text-gray-400 pt-0.5">{v.layer}</div>
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="text-sm font-medium text-gray-900 dark:text-gray-100">{v.name}</span>
+                      <span className={`text-xs px-1.5 py-0.5 rounded-full font-medium ${
+                        v.color==='green' ? 'bg-green-50 dark:bg-green-950 text-green-600 dark:text-green-400' :
+                        v.color==='yellow'? 'bg-yellow-50 dark:bg-yellow-950 text-yellow-600 dark:text-yellow-400' :
+                        'bg-gray-100 dark:bg-gray-800 text-gray-500'
+                      }`}>{v.status}</span>
+                    </div>
+                    <p className="text-xs text-gray-400 leading-relaxed">{v.desc}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
 
           <div className="mb-16">
             <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-6">Covenant lifecycle</p>
@@ -2052,31 +2095,6 @@ export default function App() {
             <GitTwinDiagram />
           </div>
 
-          <div>
-            <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-4">Three-layer verification</p>
-            <div className="space-y-3">
-              {[
-                { layer:'Layer 1', name:'Hash Chain', status:'Live',    desc:'Append-only SHA-256 chain. Tamper-evident. Trust the server owner.', color:'green' },
-                { layer:'Layer 2', name:'Git Anchor', status:'Phase 3', desc:'Settlement hash committed to the repo. Public, permanent. Trust git history.', color:'yellow' },
-                { layer:'Layer 3', name:'On-chain',   status:'Phase 7', desc:'Merkle root on-chain. Trustless, permissionless verification.', color:'gray' },
-              ].map(v => (
-                <div key={v.layer} className="flex gap-4 p-4 rounded-lg border border-gray-100 dark:border-gray-800">
-                  <div className="w-16 shrink-0 text-xs text-gray-400 pt-0.5">{v.layer}</div>
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className="text-sm font-medium text-gray-900 dark:text-gray-100">{v.name}</span>
-                      <span className={`text-xs px-1.5 py-0.5 rounded-full font-medium ${
-                        v.color==='green' ? 'bg-green-50 dark:bg-green-950 text-green-600 dark:text-green-400' :
-                        v.color==='yellow'? 'bg-yellow-50 dark:bg-yellow-950 text-yellow-600 dark:text-yellow-400' :
-                        'bg-gray-100 dark:bg-gray-800 text-gray-500'
-                      }`}>{v.status}</span>
-                    </div>
-                    <p className="text-xs text-gray-400 leading-relaxed">{v.desc}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
         </div>
       </section>
 
@@ -2114,6 +2132,39 @@ export default function App() {
                 </FadeIn>
               ))}
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* FAQ */}
+      <section className="border-t border-gray-100 dark:border-gray-800">
+        <div className="max-w-3xl mx-auto px-6 py-24">
+          <p className="text-xs font-semibold uppercase tracking-widest text-violet-500 mb-2">FAQ</p>
+          <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight mb-12">Common questions</h2>
+          <div className="space-y-8">
+            {[
+              {
+                q: 'Is ACP a blockchain or DApp?',
+                a: 'No. ACP is a self-hosted Go server. The audit chain is a SHA-256 append-only hash chain stored on your server — not Ethereum, not Solana, no wallet required. On-chain anchoring is a Phase 7 roadmap item.'
+              },
+              {
+                q: 'What are ink tokens? Can I trade or transfer them?',
+                a: 'Ink is a contribution unit, not a cryptocurrency. It is non-transferable, non-tradeable, and scoped to a single Covenant. It exists only to record relative contribution weight — who built what, and at which tier. It cannot be sent to a wallet.'
+              },
+              {
+                q: 'Does settlement move money automatically?',
+                a: 'No. Settlement generates a verified, tamper-evident record. The owner calls generate_settlement_output() then confirm_settlement_output() to lock the record. Any financial distribution — product revenue, sponsor funding, or future on-chain escrow — is a separate, owner-initiated action.'
+              },
+              {
+                q: 'Is this live, or a prototype?',
+                a: 'ACP is live. Phase 1 and Phase 2 are complete. The first real Covenant was settled on 2026-04-15. The acp-server repository is public and MIT licensed. You can run it today with a single binary.'
+              },
+            ].map(({ q, a }) => (
+              <div key={q} className="border-b border-gray-100 dark:border-gray-800 pb-8 last:border-0 last:pb-0">
+                <p className="font-semibold text-gray-900 dark:text-gray-100 mb-2">{q}</p>
+                <p className="text-gray-500 dark:text-gray-400 leading-relaxed text-sm">{a}</p>
+              </div>
+            ))}
           </div>
         </div>
       </section>

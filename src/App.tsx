@@ -1562,6 +1562,17 @@ const SETTLEMENT = [
 ]
 
 /* ═══════════════════════════════════════════════════════════════════════════
+   ClientOnly — renders children only after hydration (prevents SSR mismatch
+   for Three.js / D3 / Canvas components that need browser APIs)
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+function ClientOnly({ children, fallback = null }: { children: ReactNode; fallback?: ReactNode }) {
+  const [mounted, setMounted] = useState(false)
+  useEffect(() => { setMounted(true) }, [])
+  return mounted ? <>{children}</> : <>{fallback}</>
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
    FAQ accordion
    ═══════════════════════════════════════════════════════════════════════════ */
 
@@ -1687,7 +1698,7 @@ export default function App() {
 
       {/* Hero — cyberpunk canvas bg */}
       <section className="relative overflow-hidden bg-[#040410] min-h-screen flex flex-col items-center justify-center">
-        <HexGridBg />
+        <ClientOnly><HexGridBg /></ClientOnly>
         {/* Scanlines overlay */}
         <div
           className="absolute inset-0 z-[1] pointer-events-none"
@@ -1765,12 +1776,12 @@ export default function App() {
 
       {/* ── GoT × Space — parallax scroll narrative ── */}
       <section className="relative border-t border-white/5">
-        <GoTSpaceScroll />
+        <ClientOnly><GoTSpaceScroll /></ClientOnly>
       </section>
 
       {/* ── Section 1: Covenant Portal — Three.js torus + orbital nodes ── */}
       <section className="relative min-h-screen bg-[#05040f] overflow-hidden border-t border-white/5">
-        <CovenantPortal />
+        <ClientOnly><CovenantPortal /></ClientOnly>
         <div
           className="absolute inset-0 pointer-events-none"
           style={{ background: 'radial-gradient(ellipse 60% 50% at 50% 50%, rgba(139,92,246,0.07) 0%, transparent 70%)' }}
@@ -1790,7 +1801,7 @@ export default function App() {
       {/* ── Section 2: Hash Tunnel — scroll-driven 3D chain block descent ── */}
       <section className="relative bg-[#03060a] overflow-hidden border-t border-white/5" style={{ height: '220vh' }}>
         <div className="sticky top-0 h-screen overflow-hidden">
-          <HashTunnel />
+          <ClientOnly><HashTunnel /></ClientOnly>
           <div className="absolute inset-0 flex flex-col justify-center pl-[8%] z-10 pointer-events-none" style={{ paddingRight: '52%' }}>
             <p className="text-xs font-semibold uppercase tracking-[.25em] text-emerald-400 mb-5">The Record</p>
             <h2 className="text-5xl sm:text-6xl font-semibold tracking-tight text-white leading-[1.05]">
@@ -1994,7 +2005,7 @@ export default function App() {
 
           <div className="mb-16">
             <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-6">Covenant lifecycle</p>
-            <AnimatedCovenantFlow />
+            <ClientOnly><AnimatedCovenantFlow /></ClientOnly>
           </div>
 
           <div className="mb-16 p-6 rounded-xl border border-violet-100 dark:border-violet-900 bg-violet-50 dark:bg-violet-950/30 font-mono text-center">
@@ -2021,7 +2032,7 @@ export default function App() {
               </button>
             </div>
             <p className="text-xs text-gray-400 mb-6">Real settlement output from acp-server — not mock data. Token distribution visualised — hover a slice to inspect.</p>
-            <SettlementDonut />
+            <ClientOnly><SettlementDonut /></ClientOnly>
           </div>
 
           <div className="space-y-1 mb-16">
@@ -2200,7 +2211,7 @@ export default function App() {
           <div className="mb-16">
             <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Git Covenant Twin</p>
             <p className="text-xs text-gray-400 mb-5">ACP is the contribution-value digital twin of your git repo. Git events automatically sync to Covenant actions.</p>
-            <GitTwinDiagram />
+            <ClientOnly><GitTwinDiagram /></ClientOnly>
           </div>
 
         </div>
@@ -2261,7 +2272,7 @@ export default function App() {
           <p className="text-gray-500 dark:text-gray-400 mb-8 max-w-md mx-auto">
             Self-hosted. Zero external dependencies. Any MCP-compatible agent connects in minutes.
           </p>
-          <TypewriterCode />
+          <ClientOnly><TypewriterCode /></ClientOnly>
           <Button
             onPress={() => window.open('https://github.com/ymow/acp-server','_blank')}
             className="px-6 py-3 rounded-lg bg-violet-600 hover:bg-violet-700 text-white font-medium text-sm transition-colors outline-none focus-visible:ring-2 focus-visible:ring-violet-500 focus-visible:ring-offset-2 cursor-pointer">

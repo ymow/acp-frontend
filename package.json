@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc -b && vite build",
+    "build": "tsc -b && vite build && node scripts/prerender.mjs",
     "lint": "eslint .",
     "preview": "vite preview"
   },
@@ -15,9 +15,11 @@
     "react": "^19.2.4",
     "react-aria-components": "^1.17.0",
     "react-dom": "^19.2.4",
+    "react-router-dom": "^6.30.3",
     "tailwindcss": "^4.2.2",
     "three": "^0.183.2",
-    "vercel": "^51.4.0"
+    "vercel": "^51.4.0",
+    "vite-react-ssg": "^0.9.1-beta.1"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.4",

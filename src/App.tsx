@@ -199,7 +199,7 @@ function HashTunnel() {
     const ACTION_COLORS: [string, number][] = [
       ['propose_passage',     0x10b981],
       ['approve_draft',       0x8b5cf6],
-      ['generate_settlement', 0xf59e0b],
+      ['generate_settlement_output', 0xf59e0b],
       ['leave_covenant',      0xef4444],
       ['request_join',        0x38bdf8],
     ]
@@ -499,11 +499,11 @@ const ACTS = [
   },
   {
     tag:   'III · Agent Covenant Protocol',
-    title: 'One protocol.\nEvery action\non-chain.\nEvery agent\naccounted for.',
+    title: 'One protocol.\nEvery action\nin the record.\nEvery agent\naccounted for.',
     lines: [
-      'propose_passage()  —  intent declared',
-      'cast_vote()        —  consensus recorded',
-      'settle()           —  tokens distributed',
+      'propose_passage()            —  contribution submitted',
+      'approve_draft()              —  tokens calculated',
+      'confirm_settlement_output()  —  covenant locks',
       '',
       'Human or AI. Core or docs.',
       'The covenant treats every contributor equally.',
@@ -1281,7 +1281,7 @@ function GitTwinDiagram() {
   const rows = [
     { git:'git push',       acp:'propose_passage',     sub:'draft pending' },
     { git:'PR merged',      acp:'approve_draft',        sub:'tokens awarded' },
-    { git:'git tag v1.0',   acp:'generate_settlement',  sub:'proportional payout' },
+    { git:'git tag v1.0',   acp:'generate_settlement_output',  sub:'settlement record created' },
     { git:'settlement hash',acp:'git commit anchor',    sub:'Layer 2 proof' },
   ]
   return (
@@ -1534,15 +1534,15 @@ const TIERS = [
   { name:'core',    multiplier:'3×',   desc:'Protocol design, security-critical code' },
   { name:'feature', multiplier:'2×',   desc:'Feature implementation, tooling' },
   { name:'review',  multiplier:'1.5×', desc:'Code review, testing, QA' },
-  { name:'docs',    multiplier:'1×',   desc:'Documentation, specs, roadmap' },
+  { name:'docs',    multiplier:'1×',   desc:'Documentation, specifications, technical writing' },
 ]
 
 const STEPS = [
-  { n:'01', title:'Create a Covenant',   desc:'Define contribution tiers, budget, and token rules. DRAFT → OPEN.' },
-  { n:'02', title:'Participants join',   desc:'Human or AI agents apply. Owner approves. Any MCP-compatible agent works.' },
-  { n:'03', title:'Contribute',          desc:'Call propose_passage with your work. Every action is recorded in an append-only hash chain.' },
-  { n:'04', title:'Owner approves',      desc:'approve_draft triggers automatic token calculation. No spreadsheets.' },
-  { n:'05', title:'Settle',              desc:'Lock the Covenant. Generate settlement. Tokens distributed proportionally. SETTLED ✓' },
+  { n:'01', title:'Create a Covenant',   desc:'Configure contribution tiers and token rules. Transition DRAFT → OPEN → ACTIVE.' },
+  { n:'02', title:'Participants join',   desc:'Human or AI agents apply via approve_agent. Owner approves. Any MCP-compatible agent works.' },
+  { n:'03', title:'Contribute',          desc:'Call propose_passage with your work. Every action is recorded in the append-only audit hash chain.' },
+  { n:'04', title:'Owner approves',      desc:'approve_draft calculates tokens automatically using the formula. No spreadsheets.' },
+  { n:'05', title:'Settle',              desc:'generate_settlement_output creates the record. confirm_settlement_output locks it. SETTLED ✓' },
 ]
 
 const PRINCIPLES = [
@@ -1550,7 +1550,7 @@ const PRINCIPLES = [
   { icon:'◈', title:'Identity-independent', desc:'Agent identity (agent_id) is separate from operator identity (owner_id). The agent is not the tool.' },
   { icon:'▦', title:'Transparent',          desc:'Every participant can query their complete contribution history. The audit log is tamper-evident.' },
   { icon:'◎', title:'Fair compensation',    desc:'Tokens follow a public formula. Rules are set before work begins, not after.' },
-  { icon:'↩', title:'Right to exit',        desc:'Participants can leave. Confirmed contributions are never deleted.' },
+  { icon:'↩', title:'Right to exit',        desc:'Participants can leave at any time. Confirmed contributions are append-only — they are never deleted from the record.' },
 ]
 
 const SETTLEMENT = [
@@ -1609,7 +1609,7 @@ export default function App() {
           </h1>
 
           <p className="text-lg sm:text-xl text-white/55 max-w-2xl mx-auto leading-relaxed mb-10">
-            ACP is an open protocol for multi-participant collaboration — with tamper-evident contribution tracking, automatic token settlement, and no central platform.
+            Record who built what. Distribute tokens by a public formula. Self-hosted, with no platform in the middle.
           </p>
 
           <div className="flex flex-wrap items-center justify-center gap-3">
@@ -1665,7 +1665,7 @@ export default function App() {
             <span className="text-violet-400">Any contributor.</span>
           </h2>
           <p className="mt-7 text-white/38 text-lg max-w-xl leading-relaxed">
-            Human or AI — every participant operates under the same verifiable rules, recorded immutably on-chain.
+            Human or AI — every participant operates under the same verifiable rules, recorded in a tamper-evident audit log.
           </p>
         </div>
       </section>
@@ -1685,9 +1685,9 @@ export default function App() {
             </p>
             <div className="mt-10 flex flex-col gap-2.5">
               {[
-                { action: 'propose_passage',     color: 'bg-emerald-400' },
-                { action: 'approve_draft',       color: 'bg-violet-400'  },
-                { action: 'generate_settlement', color: 'bg-amber-400'   },
+                { action: 'propose_passage',            color: 'bg-emerald-400' },
+                { action: 'approve_draft',              color: 'bg-violet-400'  },
+                { action: 'generate_settlement_output', color: 'bg-amber-400'   },
               ].map(({ action, color }) => (
                 <div key={action} className="flex items-center gap-2.5">
                   <span className={`w-2 h-2 rounded-full shrink-0 ${color}`} />
@@ -1753,7 +1753,7 @@ export default function App() {
                     {[
                       { icon: '◈', label: 'Rules set in advance', sub: 'Tiers, formula, and budget locked at creation' },
                       { icon: '▦', label: 'Append-only record',   sub: 'Every action hashed into a tamper-evident chain' },
-                      { icon: '◎', label: 'Settles automatically', sub: 'settle() distributes by ink share — no spreadsheets' },
+                      { icon: '◎', label: 'Settles automatically', sub: 'confirm_settlement_output() locks ink totals — no spreadsheets' },
                     ].map(item => (
                       <div key={item.label} className="flex gap-3">
                         <span className="text-violet-400/60 font-mono text-base mt-0.5 w-5 shrink-0">{item.icon}</span>
@@ -1781,11 +1781,11 @@ export default function App() {
                     ACP exposes MCP-compatible endpoints. Claude, GPT, or any custom agent connects in minutes — calling the same protocol as every human contributor. Same rules. Same token formula.
                   </p>
                   <div className="rounded-xl bg-black/40 border border-white/8 p-4 font-mono text-xs space-y-2">
-                    <p className="text-white/20 mb-3">{'// Agent joins via MCP tool call'}</p>
+                    <p className="text-white/20 mb-3">{'// Agent participates via MCP tool call'}</p>
                     {[
-                      { fn: 'propose_passage()', color: 'text-emerald-400', note: '→ work recorded on-chain' },
-                      { fn: 'cast_vote()',        color: 'text-sky-400',    note: '→ consensus reached'     },
-                      { fn: 'settle()',           color: 'text-amber-400',  note: '→ tokens distributed'    },
+                      { fn: 'propose_passage()',           color: 'text-emerald-400', note: '→ recorded in hash chain' },
+                      { fn: 'approve_draft()',             color: 'text-sky-400',    note: '→ tokens calculated'      },
+                      { fn: 'confirm_settlement_output()', color: 'text-amber-400',  note: '→ covenant locks, SETTLED' },
                     ].map(item => (
                       <div key={item.fn} className="flex items-center gap-3">
                         <span className={`${item.color} w-40 shrink-0`}>{item.fn}</span>
@@ -1867,7 +1867,12 @@ export default function App() {
           </div>
 
           <div className="mb-16">
-            <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-4">Contribution tiers</p>
+            <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Contribution tiers</p>
+            <p className="text-xs text-gray-400 mb-4">
+              Each tier sets the <span className="font-mono text-violet-500 dark:text-violet-400">tier_multiplier</span> in the settlement formula:{' '}
+              <span className="font-mono text-gray-600 dark:text-gray-300">tokens = unit_count × tier_multiplier × acceptance_ratio</span>.
+              Tiers are configurable per Covenant — the values below are suggested defaults.
+            </p>
             <div className="grid sm:grid-cols-4 gap-3">
               {TIERS.map(t => (
                 <div key={t.name} className="p-4 rounded-lg border border-gray-100 dark:border-gray-800">
@@ -1885,15 +1890,15 @@ export default function App() {
           <div className="mb-16">
             <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Record first. Share when ready.</p>
             <p className="text-xs text-gray-400 mb-8 max-w-2xl leading-relaxed">
-              ACP doesn't require anyone to deposit crypto or commit funds upfront. The Covenant records every contribution as it happens — verified, timestamped, hashed. When profit exists, the owner shares it using ink tokens as the distribution formula. That's it.
+              ACP doesn't require anyone to deposit crypto or commit funds upfront. The Covenant records every contribution as it happens — verified, timestamped, hashed. When profit exists, the owner uses each contributor's ink token share as the distribution key. That's it.
             </p>
 
             {/* Flow: work → record → share */}
             <div className="mb-10 flex flex-col sm:flex-row items-stretch gap-0">
               {[
-                { step: '01', label: 'Work happens',     desc: 'Contributors propose, vote, and build. Every action recorded in the append-only hash chain.',    color: 'border-violet-800/50 bg-violet-950/20', accent: 'text-violet-400' },
-                { step: '02', label: 'Covenant settles', desc: 'Owner calls settle(). Ink token totals are locked — the permanent, verifiable record of contribution weight.', color: 'border-sky-800/50 bg-sky-950/20',    accent: 'text-sky-400'    },
-                { step: '03', label: 'Share when ready', desc: 'Whenever revenue exists — use the settled ink percentages to distribute. Any amount. Any currency. Any time.', color: 'border-amber-800/50 bg-amber-950/20', accent: 'text-amber-400'  },
+                { step: '01', label: 'Work happens',     desc: 'Contributors propose and build. Every action is permanently recorded — tamper-evident, timestamped, and verifiable.',    color: 'border-violet-800/50 bg-violet-950/20', accent: 'text-violet-400' },
+                { step: '02', label: 'Covenant settles', desc: 'Owner generates and confirms settlement. Ink token totals lock into the permanent record of contribution weight.', color: 'border-sky-800/50 bg-sky-950/20', accent: 'text-sky-400', detail: 'generate_settlement_output() → confirm_settlement_output()' },
+                { step: '03', label: 'Share when ready', desc: 'Whenever revenue exists — use the settled ink percentages to distribute. Any amount. Any currency. Any time. Three ways to do this below.', color: 'border-amber-800/50 bg-amber-950/20', accent: 'text-amber-400'  },
               ].map((s, i) => (
                 <div key={s.step} className="flex sm:flex-col flex-1">
                   <div className={`flex-1 p-5 rounded-xl border ${s.color} flex flex-col gap-2`}>
@@ -1902,6 +1907,9 @@ export default function App() {
                       <span className="text-sm font-semibold text-gray-100">{s.label}</span>
                     </div>
                     <p className="text-xs text-gray-400 leading-relaxed">{s.desc}</p>
+                    {'detail' in s && s.detail && (
+                      <p className="text-[10px] font-mono text-white/20 mt-1">{s.detail}</p>
+                    )}
                   </div>
                   {i < 2 && <div className="hidden sm:flex items-center justify-center w-6 shrink-0 text-white/15 text-lg">›</div>}
                 </div>
@@ -1915,23 +1923,29 @@ export default function App() {
                 {
                   icon: '◎',
                   label: 'Share product revenue',
+                  status: 'Live now',
+                  statusColor: 'bg-green-900/60 text-green-400',
                   color: 'green',
-                  desc: 'Product earns revenue. Owner decides to share a percentage with contributors. Ink token share determines each contributor\'s cut — no negotiation, no spreadsheet.',
+                  desc: 'Product earns revenue. Owner shares a percentage with contributors. Each contributor\'s ink token share is the distribution key — no negotiation, no spreadsheet.',
                   note: 'Works with any payment: crypto, USDC, fiat bank transfer.',
                 },
                 {
                   icon: '◈',
                   label: 'Invite sponsors',
+                  status: 'Live now',
+                  statusColor: 'bg-green-900/60 text-green-400',
                   color: 'blue',
-                  desc: 'Show the verified Covenant to open-source sponsors, grants, or investors. The tamper-evident record proves exactly what was built, by whom, and at what tier. Sponsors fund the pool; ink tokens determine the split.',
+                  desc: 'Show the verified Covenant to open-source sponsors, grants, or investors. The tamper-evident audit log proves exactly what was built, by whom, and at what tier — verifiable by any funder.',
                   note: 'GitHub Sponsors, OpenCollective, DAO grants — any source.',
                 },
                 {
                   icon: '▦',
                   label: 'On-chain trustless',
+                  status: 'Phase 7 · Roadmap',
+                  statusColor: 'bg-gray-800 text-gray-500',
                   color: 'gray',
-                  desc: 'Smart contract holds the pool. ACP Merkle root posted on-chain. settle() triggers automatic ERC-20 transfer — no owner needs to initiate. The covenant enforces it.',
-                  note: 'Phase 7 roadmap — fully trustless, self-executing.',
+                  desc: 'Smart contract holds the pool. ACP Merkle root posted on-chain. When Phase 7 ships, settlement confirmation triggers automatic ERC-20 transfer — no owner needs to initiate. The smart contract enforces it.',
+                  note: 'Fully trustless, self-executing. No trust required.',
                 },
               ].map(m => (
                 <FadeIn key={m.label}>
@@ -1940,11 +1954,14 @@ export default function App() {
                     m.color === 'blue'  ? 'border-sky-900/50 bg-sky-950/15 dark:bg-sky-950/10' :
                     'border-gray-700/40 bg-gray-900/20'
                   }`}>
-                    <span className={`text-xl font-mono ${
-                      m.color === 'green' ? 'text-green-500/60' :
-                      m.color === 'blue'  ? 'text-sky-500/60' :
-                      'text-gray-600'
-                    }`}>{m.icon}</span>
+                    <div className="flex items-center justify-between">
+                      <span className={`text-xl font-mono ${
+                        m.color === 'green' ? 'text-green-500/60' :
+                        m.color === 'blue'  ? 'text-sky-500/60' :
+                        'text-gray-600'
+                      }`}>{m.icon}</span>
+                      <span className={`text-[9px] font-semibold px-2 py-0.5 rounded-full uppercase tracking-widest ${m.statusColor}`}>{m.status}</span>
+                    </div>
                     <p className="text-sm font-semibold text-gray-100">{m.label}</p>
                     <p className="text-xs text-gray-400 leading-relaxed flex-1">{m.desc}</p>
                     <p className={`text-[11px] font-mono border-t border-white/5 pt-3 ${
@@ -2066,7 +2083,7 @@ export default function App() {
 
           <div>
             <p className="text-xs font-semibold uppercase tracking-widest text-violet-500 mb-2">Constitutional Principles</p>
-            <p className="text-sm text-gray-400 mb-8">The design constraints that govern every phase of ACP.</p>
+            <p className="text-sm text-gray-400 mb-8">The design principles embedded in every phase of ACP. Formalized in Phase 3.</p>
             <div className="grid sm:grid-cols-5 gap-4">
               {PRINCIPLES.map((p, i) => (
                 <FadeIn key={p.title} delay={i * 80}>

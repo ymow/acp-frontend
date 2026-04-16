@@ -1677,11 +1677,14 @@ export default function App() {
       {/* Plain-English strip — answers every reviewer before the hero loads */}
       <section className="bg-white dark:bg-[#09090b] border-b border-gray-100 dark:border-white/6">
         <div className="max-w-5xl mx-auto px-6 py-7">
-          <p className="text-[10px] font-semibold uppercase tracking-widest text-gray-400 mb-4">ACP in plain English</p>
+          <div className="flex items-baseline gap-3 mb-4">
+            <p className="text-[10px] font-semibold uppercase tracking-widest text-gray-400">Agent Covenant Protocol · ACP in plain English</p>
+            <p className="text-[10px] text-gray-400/60">(not the Agent Client Protocol or Agent Communication Protocol)</p>
+          </div>
           <div className="grid sm:grid-cols-3 gap-6">
             {[
               { n: '1', label: 'What it is',   body: 'A self-hosted Go server. Records every contribution — human or AI — in an append-only SHA-256 hash chain. No blockchain, no wallet, no central platform.' },
-              { n: '2', label: 'What it does',  body: 'Calculates each contributor\'s ink token share with a public formula. Ink tokens are contribution units — non-transferable, not a currency.' },
+              { n: '2', label: 'What it does',  body: <span>Calculates each contributor's ink token share. The formula is public: <span className="font-mono text-violet-600 dark:text-violet-400 whitespace-nowrap">tokens = unit_count × tier_multiplier × acceptance_ratio</span>. Ink tokens are non-transferable — not a currency.</span> },
               { n: '3', label: 'What you get',  body: 'A tamper-evident settlement record. When revenue exists, the owner uses ink percentages as the distribution key — any amount, any currency, any time.' },
             ].map(({ n, label, body }) => (
               <div key={n} className="flex gap-3">

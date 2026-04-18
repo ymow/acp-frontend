@@ -95,8 +95,8 @@ reject_draft()     →  passage closed, zero tokens`}</Pre>
         headers={['Layer', 'Mechanism', 'Trust model', 'Status']}
         rows={[
           ['Layer 1', 'SHA-256 append-only hash chain on the server', 'Trust the server operator', 'Live'],
-          ['Layer 2', 'Settlement hash committed to git history', 'Trust git history', 'Phase 3 roadmap'],
-          ['Layer 3', 'Merkle root posted on-chain', 'Trustless, permissionless', 'Phase 7 roadmap'],
+          ['Layer 2', 'ed25519-signed settlement anchor on refs/notes/acp-anchors', 'Trust git history + signing key', 'Phase 3.A · in progress'],
+          ['Layer 3', 'Merkle root posted on-chain', 'Trustless, permissionless', 'Phase 7 · roadmap'],
         ]}
       />
 
@@ -113,13 +113,20 @@ curl http://localhost:8080/covenants/$CVNT_ID/audit/verify`}</Pre>
         For self-hosted deployments where you run the server yourself, Layer 1 is sufficient.
       </P>
 
-      <H3>Layer 2 — Git Anchor (Phase 3)</H3>
+      <H3>Layer 2 — Git Covenant Twin anchor (Phase 3.A · in progress)</H3>
       <P>
-        Settlement hash committed to the repository's git history. This creates a permanent, public record
-        tied to the code history — anyone with repo access can verify it independently without trusting the
-        server operator.
+        The settlement hash is committed to the repository's git history as a signed note on
+        <Code>refs/notes/acp-anchors</Code>. Anyone with repo access can verify the anchor independently
+        without trusting the server operator.
       </P>
-      <P>Already in use: <Code>settlements/2026-04-15-acp-server-phase1-2.json</Code> in the acp-server repo.</P>
+      <P>
+        ACR-400 v0.2 uses <Code>ed25519</Code> signatures over the canonical JSON body of each anchor. The
+        server's public key is served at <Code>GET /git-twin/pubkey</Code>; a verifier runs
+        <Code>git notes --ref=refs/notes/acp-anchors show &lt;commit&gt;</Code> and checks the signature
+        against that key. Tampering with any field — <Code>total_tokens</Code>, <Code>snapshot_hash</Code>,
+        <Code>settlement_hash</Code> — invalidates the signature.
+      </P>
+      <P>Reference artefact: <Code>settlements/2026-04-15-acp-server-phase1-2.json</Code> in the acp-server repo.</P>
 
       <H3>Layer 3 — On-chain Merkle Proof (Phase 7)</H3>
       <P>

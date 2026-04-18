@@ -1,1031 +1,9 @@
 import { useRef, useEffect, useState, Fragment, type ReactNode } from 'react'
 import { arc, pie, select, interpolate } from 'd3'
-import * as THREE from 'three'
 import { Button, Link } from 'react-aria-components'
 import './App.css'
 
-/* ═══════════════════════════════════════════════════════════════════════════
-   Lusion-style immersive 3-section showcase
-   ═══════════════════════════════════════════════════════════════════════════ */
-
-/* ── CovenantPortal: Three.js torus ring + 6 orbiting contributor nodes ─── */
-function CovenantPortal() {
-  const mountRef = useRef<HTMLDivElement>(null)
-
-  useEffect(() => {
-    const container = mountRef.current!
-    let W = container.clientWidth, H = container.clientHeight
-    let alive = true
-    const mouse = { x: 0, y: 0, tx: 0, ty: 0 }
-
-    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true })
-    renderer.setPixelRatio(Math.min(devicePixelRatio, 2))
-    renderer.setSize(W, H)
-    renderer.setClearColor(0x000000, 0)
-    container.appendChild(renderer.domElement)
-
-    const scene = new THREE.Scene()
-    const camera = new THREE.PerspectiveCamera(50, W / H, 0.1, 100)
-    camera.position.set(0, 0, 8)
-
-    /* Covenant torus rings */
-    const torusGeo = new THREE.TorusGeometry(2.4, 0.012, 6, 160)
-    const torusMat = new THREE.LineBasicMaterial({ color: 0x8b5cf6, transparent: true, opacity: 0.75 })
-    const torus = new THREE.Line(torusGeo, torusMat)
-    scene.add(torus)
-
-    const innerGeo = new THREE.TorusGeometry(1.72, 0.008, 6, 120)
-    const innerMat = new THREE.LineBasicMaterial({ color: 0x6d28d9, transparent: true, opacity: 0.38 })
-    const innerRing = new THREE.Line(innerGeo, innerMat)
-    scene.add(innerRing)
-
-    const outerGeo = new THREE.TorusGeometry(3.1, 0.006, 4, 120)
-    const outerMat = new THREE.LineBasicMaterial({ color: 0xc4b5fd, transparent: true, opacity: 0.12 })
-    const outerRing = new THREE.Line(outerGeo, outerMat)
-    scene.add(outerRing)
-
-    /* Central covenant icosahedron */
-    const coreGeo = new THREE.IcosahedronGeometry(0.28, 1)
-    const coreMat = new THREE.MeshBasicMaterial({ color: 0x8b5cf6, wireframe: true, transparent: true, opacity: 0.65 })
-    const core = new THREE.Mesh(coreGeo, coreMat)
-    scene.add(core)
-
-    /* Contributor nodes */
-    const CONTRIBUTORS = [
-      { tier: 'core',    color: 0x38bdf8, r: 3.3, speed:  0.065 },
-      { tier: 'feature', color: 0xa78bfa, r: 3.7, speed: -0.052 },
-      { tier: 'core',    color: 0x38bdf8, r: 3.3, speed:  0.071 },
-      { tier: 'review',  color: 0xfbbf24, r: 3.7, speed: -0.048 },
-      { tier: 'feature', color: 0xa78bfa, r: 3.3, speed:  0.058 },
-      { tier: 'docs',    color: 0x34d399, r: 3.7, speed: -0.063 },
-    ]
-    const baseAngles = CONTRIBUTORS.map((_, i) => (i / CONTRIBUTORS.length) * Math.PI * 2)
-
-    const nodeMeshes: THREE.Mesh[] = []
-    const nodeTrails: THREE.Points[] = []
-    const connLines: THREE.Line[] = []
-    const trailHistory: THREE.Vector3[][] = CONTRIBUTORS.map(() =>
-      Array.from({ length: 14 }, () => new THREE.Vector3())
-    )
-
-    CONTRIBUTORS.forEach((c, _i) => {
-      const geo = new THREE.IcosahedronGeometry(c.tier === 'core' ? 0.13 : 0.1, 0)
-      const mat = new THREE.MeshBasicMaterial({ color: c.color, wireframe: true, transparent: true, opacity: 0.82 })
-      const mesh = new THREE.Mesh(geo, mat)
-      scene.add(mesh)
-      nodeMeshes.push(mesh)
-
-      const trailN = 14
-      const trailPos = new Float32Array(trailN * 3)
-      const trailGeo = new THREE.BufferGeometry()
-      trailGeo.setAttribute('position', new THREE.BufferAttribute(trailPos, 3))
-      const trailMat = new THREE.PointsMaterial({ color: c.color, size: 0.04, transparent: true, opacity: 0.4 })
-      const trail = new THREE.Points(trailGeo, trailMat)
-      scene.add(trail)
-      nodeTrails.push(trail)
-
-      const connPts = new Float32Array(6)
-      const connGeo = new THREE.BufferGeometry()
-      connGeo.setAttribute('position', new THREE.BufferAttribute(connPts, 3))
-      const connMat = new THREE.LineBasicMaterial({ color: c.color, transparent: true, opacity: 0.12 })
-      const conn = new THREE.Line(connGeo, connMat)
-      scene.add(conn)
-      connLines.push(conn)
-    })
-
-    const onMouse = (e: MouseEvent) => {
-      mouse.tx = (e.clientX / window.innerWidth) * 2 - 1
-      mouse.ty = -((e.clientY / window.innerHeight) * 2 - 1)
-    }
-    window.addEventListener('mousemove', onMouse)
-
-    let rafId = 0
-    const animate = (ts: number) => {
-      if (!alive) return
-      rafId = requestAnimationFrame(animate)
-      const t = ts * 0.001
-
-      torus.rotation.z = t * 0.1
-      innerRing.rotation.z = -t * 0.16
-      outerRing.rotation.z = t * 0.06
-      core.rotation.x = t * 0.35
-      core.rotation.y = t * 0.27
-
-      CONTRIBUTORS.forEach((c, i) => {
-        const angle = baseAngles[i] + t * c.speed
-        const nx = Math.cos(angle) * c.r
-        const ny = Math.sin(angle) * c.r
-        const nz = Math.sin(angle * 0.5) * 0.3
-        nodeMeshes[i].position.set(nx, ny, nz)
-        nodeMeshes[i].rotation.y = t * 0.9
-
-        const hist = trailHistory[i]
-        hist.unshift(new THREE.Vector3(nx, ny, nz))
-        if (hist.length > 14) hist.pop()
-        const trailPos = nodeTrails[i].geometry.attributes.position.array as Float32Array
-        hist.forEach((p, pi) => {
-          trailPos[pi * 3] = p.x
-          trailPos[pi * 3 + 1] = p.y
-          trailPos[pi * 3 + 2] = p.z
-        })
-        nodeTrails[i].geometry.attributes.position.needsUpdate = true
-
-        const connPos = connLines[i].geometry.attributes.position.array as Float32Array
-        connPos[0] = 0; connPos[1] = 0; connPos[2] = 0
-        connPos[3] = nx; connPos[4] = ny; connPos[5] = nz
-        connLines[i].geometry.attributes.position.needsUpdate = true
-        ;(connLines[i].material as THREE.LineBasicMaterial).opacity =
-          0.08 + 0.08 * Math.sin(t * 1.5 + i * 1.1)
-      })
-
-      mouse.x += (mouse.tx - mouse.x) * 0.035
-      mouse.y += (mouse.ty - mouse.y) * 0.035
-      camera.position.x += (mouse.x * 0.5 - camera.position.x) * 0.04
-      camera.position.y += (mouse.y * 0.35 - camera.position.y) * 0.04
-      camera.lookAt(0, 0, 0)
-
-      renderer.render(scene, camera)
-    }
-    rafId = requestAnimationFrame(animate)
-
-    const onResize = () => {
-      W = container.clientWidth; H = container.clientHeight
-      camera.aspect = W / H; camera.updateProjectionMatrix()
-      renderer.setSize(W, H)
-    }
-    window.addEventListener('resize', onResize)
-
-    return () => {
-      alive = false
-      cancelAnimationFrame(rafId)
-      window.removeEventListener('mousemove', onMouse)
-      window.removeEventListener('resize', onResize)
-      if (container.contains(renderer.domElement)) container.removeChild(renderer.domElement)
-      torusGeo.dispose(); torusMat.dispose()
-      innerGeo.dispose(); innerMat.dispose()
-      outerGeo.dispose(); outerMat.dispose()
-      coreGeo.dispose(); coreMat.dispose()
-      nodeMeshes.forEach(m => { m.geometry.dispose(); (m.material as THREE.Material).dispose() })
-      nodeTrails.forEach(tr => { tr.geometry.dispose(); (tr.material as THREE.Material).dispose() })
-      connLines.forEach(c => { c.geometry.dispose(); (c.material as THREE.Material).dispose() })
-      renderer.dispose()
-    }
-  }, [])
-
-  return <div ref={mountRef} className="absolute inset-0" />
-}
-
-/* ── HashTunnel: scroll-driven 3D chain block descent ───────────────────── */
-function HashTunnel() {
-  const mountRef = useRef<HTMLDivElement>(null)
-
-  useEffect(() => {
-    const container = mountRef.current!
-    let W = container.clientWidth, H = container.clientHeight
-    let alive = true
-
-    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true })
-    renderer.setPixelRatio(Math.min(devicePixelRatio, 2))
-    renderer.setSize(W, H)
-    renderer.setClearColor(0x000000, 0)
-    container.appendChild(renderer.domElement)
-
-    const scene = new THREE.Scene()
-    const camera = new THREE.PerspectiveCamera(58, W / H, 0.1, 300)
-    camera.position.set(0, 0, 18)
-
-    const BLOCK_COUNT = 42
-    const SPACING = 3.0
-    const ACTION_COLORS: [string, number][] = [
-      ['propose_passage',     0x10b981],
-      ['approve_draft',       0x8b5cf6],
-      ['generate_settlement_output', 0xf59e0b],
-      ['leave_covenant',      0xef4444],
-      ['request_join',        0x38bdf8],
-    ]
-
-    interface BlockData { mesh: THREE.LineSegments; baseY: number }
-    const blockData: BlockData[] = []
-
-    for (let i = 0; i < BLOCK_COUNT; i++) {
-      const bw = 4.4 + (Math.random() - 0.5) * 0.5
-      const bh = 0.68
-      const bd = 1.1 + (Math.random() - 0.5) * 0.3
-      const geo = new THREE.BoxGeometry(bw, bh, bd)
-      const edges = new THREE.EdgesGeometry(geo)
-      const [, color] = ACTION_COLORS[i % ACTION_COLORS.length]
-      const mat = new THREE.LineBasicMaterial({ color, transparent: true, opacity: 0.55 + Math.random() * 0.25 })
-      const mesh = new THREE.LineSegments(edges, mat)
-      const baseY = 10 - i * SPACING
-      mesh.position.set((Math.random() - 0.5) * 0.7, baseY, (Math.random() - 0.5) * 0.4)
-      mesh.rotation.y = (Math.random() - 0.5) * 0.12
-      scene.add(mesh)
-      blockData.push({ mesh, baseY })
-      geo.dispose()
-    }
-
-    /* Vertical chain links */
-    for (let i = 0; i < BLOCK_COUNT - 1; i++) {
-      const y1 = 10 - i * SPACING - 0.34
-      const y2 = 10 - (i + 1) * SPACING + 0.34
-      const pts = new Float32Array([0, y1, 0, 0, y2, 0])
-      const g = new THREE.BufferGeometry()
-      g.setAttribute('position', new THREE.BufferAttribute(pts, 3))
-      const m = new THREE.LineBasicMaterial({ color: 0x22c55e, transparent: true, opacity: 0.1 })
-      scene.add(new THREE.Line(g, m))
-    }
-
-    let scrollProg = 0
-    const section = container.closest('section')
-    const onScroll = () => {
-      if (!section) return
-      const rect = section.getBoundingClientRect()
-      const total = section.offsetHeight - window.innerHeight
-      scrollProg = Math.min(1, Math.max(0, -rect.top) / Math.max(1, total))
-    }
-    window.addEventListener('scroll', onScroll, { passive: true })
-    onScroll()
-
-    let camY = 0, camZ = 18, rafId = 0
-    const animate = (ts: number) => {
-      if (!alive) return
-      rafId = requestAnimationFrame(animate)
-      const t = ts * 0.001
-
-      const targetY = -(scrollProg * BLOCK_COUNT * SPACING * 0.72 - 2)
-      const targetZ = 18 - scrollProg * 6
-      camY += (targetY - camY) * 0.05
-      camZ += (targetZ - camZ) * 0.05
-      camera.position.y = camY
-      camera.position.z = camZ
-      camera.lookAt(0, camY - 5, 0)
-
-      blockData.forEach(({ mesh }, idx) => {
-        mesh.rotation.y += 0.003
-        const dist = Math.abs(mesh.position.y - camera.position.y)
-        const mat = mesh.material as THREE.LineBasicMaterial
-        mat.opacity = dist < 14 ? 0.38 + 0.32 * Math.sin(t * 1.6 + idx * 0.85) : 0.08
-      })
-
-      renderer.render(scene, camera)
-    }
-    rafId = requestAnimationFrame(animate)
-
-    const onResize = () => {
-      W = container.clientWidth; H = container.clientHeight
-      camera.aspect = W / H; camera.updateProjectionMatrix()
-      renderer.setSize(W, H)
-    }
-    window.addEventListener('resize', onResize)
-
-    return () => {
-      alive = false
-      cancelAnimationFrame(rafId)
-      window.removeEventListener('scroll', onScroll)
-      window.removeEventListener('resize', onResize)
-      if (container.contains(renderer.domElement)) container.removeChild(renderer.domElement)
-      blockData.forEach(({ mesh }) => {
-        mesh.geometry.dispose()
-        ;(mesh.material as THREE.Material).dispose()
-      })
-      renderer.dispose()
-    }
-  }, [])
-
-  return <div ref={mountRef} className="absolute inset-0" />
-}
-
-/* ── SettlementWeb: canvas 2D animated token flow web ───────────────────── */
-function SettlementWeb() {
-  const canvasRef = useRef<HTMLCanvasElement>(null)
-
-  useEffect(() => {
-    const canvas = canvasRef.current!
-    const ctx = canvas.getContext('2d')!
-    let W = 0, H = 0, raf = 0, alive = true
-    let startT = -1, triggered = false
-
-    const resize = () => {
-      const dpr = devicePixelRatio || 1
-      W = canvas.offsetWidth; H = canvas.offsetHeight
-      if (!W || !H) return
-      canvas.width = W * dpr; canvas.height = H * dpr
-      ctx.resetTransform(); ctx.scale(dpr, dpr)
-    }
-    const ro = new ResizeObserver(resize)
-    ro.observe(canvas); resize()
-
-    const SETTLERS = [
-      { name: 'Tyrion', tier: 'core',    tokens: 2580, color: '#38bdf8' },
-      { name: 'Arya',   tier: 'core',    tokens:  720, color: '#38bdf8' },
-      { name: 'Stannis',tier: 'review',  tokens:  465, color: '#fbbf24' },
-      { name: 'Jon',    tier: 'feature', tokens:  360, color: '#a78bfa' },
-      { name: 'Sansa',  tier: 'docs',    tokens:  350, color: '#34d399' },
-    ]
-    const TOTAL = SETTLERS.reduce((s, x) => s + x.tokens, 0)
-
-    type Particle = { x: number; y: number; tx: number; ty: number; life: number; speed: number }
-    const particles: Particle[] = []
-
-    const tick = (ts: number) => {
-      if (!alive) return
-      raf = requestAnimationFrame(tick)
-      if (!W || !H || !triggered) return
-      if (startT < 0) startT = ts
-      const elapsed = (ts - startT) * 0.001
-
-      ctx.clearRect(0, 0, W, H)
-
-      const cx = W / 2
-      const cy = H * 0.52
-      const radius = Math.min(W, H) * 0.30
-
-      SETTLERS.forEach((s, i) => {
-        const angle = (i / SETTLERS.length) * Math.PI * 2 - Math.PI * 0.5
-        const nx = cx + Math.cos(angle) * radius
-        const ny = cy + Math.sin(angle) * radius
-        const nodeR = 11 + (s.tokens / TOTAL) * 30
-        const delay = i * 0.3
-        const prog = Math.min(1, Math.max(0, (elapsed - delay) * 1.6))
-        if (prog <= 0) return
-
-        /* Spoke */
-        ctx.save()
-        ctx.globalAlpha = prog * 0.18 + 0.05 * Math.sin(elapsed * 1.8 + i)
-        ctx.strokeStyle = s.color; ctx.lineWidth = 1.2
-        ctx.setLineDash([3, 10])
-        ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(nx, ny); ctx.stroke()
-        ctx.setLineDash([])
-        ctx.restore()
-
-        /* Node glow */
-        ctx.save()
-        ctx.globalAlpha = prog * 0.2
-        const grd = ctx.createRadialGradient(nx, ny, 0, nx, ny, nodeR * 3.5)
-        grd.addColorStop(0, s.color); grd.addColorStop(1, s.color + '00')
-        ctx.fillStyle = grd
-        ctx.beginPath(); ctx.arc(nx, ny, nodeR * 3.5, 0, Math.PI * 2); ctx.fill()
-        ctx.restore()
-
-        /* Node ring */
-        ctx.save()
-        ctx.globalAlpha = prog * 0.88
-        ctx.strokeStyle = s.color; ctx.lineWidth = 1.5
-        ctx.beginPath(); ctx.arc(nx, ny, nodeR, 0, Math.PI * 2); ctx.stroke()
-        ctx.restore()
-
-        /* Label */
-        const counted = Math.floor(prog * s.tokens)
-        ctx.save()
-        ctx.globalAlpha = prog * 0.82
-        ctx.fillStyle = '#e2e8f0'
-        ctx.font = '700 13px monospace'
-        ctx.textAlign = 'center'
-        ctx.fillText(s.name, nx, ny - nodeR - 14)
-        ctx.font = '11px monospace'
-        ctx.fillStyle = s.color
-        ctx.fillText(counted + ' ink', nx, ny - nodeR - 1)
-        ctx.restore()
-
-        /* Spawn gold particles */
-        if (prog > 0.18 && Math.random() < 0.18) {
-          particles.push({
-            x: cx + (Math.random() - 0.5) * 8,
-            y: cy + (Math.random() - 0.5) * 8,
-            tx: nx, ty: ny, life: 1,
-            speed: 1.2 + Math.random() * 1.6,
-          })
-        }
-      })
-
-      /* Particles */
-      for (let pi = particles.length - 1; pi >= 0; pi--) {
-        const p = particles[pi]
-        const dx = p.tx - p.x, dy = p.ty - p.y
-        const d = Math.sqrt(dx * dx + dy * dy)
-        if (d < 4) { particles.splice(pi, 1); continue }
-        p.x += (dx / d) * p.speed * 2.8
-        p.y += (dy / d) * p.speed * 2.8
-        p.life -= 0.014
-        if (p.life <= 0) { particles.splice(pi, 1); continue }
-        ctx.save()
-        ctx.globalAlpha = p.life * 0.9
-        ctx.fillStyle = '#f59e0b'
-        ctx.shadowBlur = 8; ctx.shadowColor = '#f59e0b'
-        ctx.beginPath(); ctx.arc(p.x, p.y, 2.2, 0, Math.PI * 2); ctx.fill()
-        ctx.restore()
-      }
-
-      /* Center COVENANT core */
-      const pulse = 0.6 + 0.2 * Math.sin(elapsed * 2.1)
-      const coreR = 26
-      ctx.save()
-      ctx.globalAlpha = pulse
-      const cg = ctx.createRadialGradient(cx, cy, 0, cx, cy, coreR * 3)
-      cg.addColorStop(0, '#8b5cf6cc'); cg.addColorStop(1, '#8b5cf600')
-      ctx.fillStyle = cg
-      ctx.beginPath(); ctx.arc(cx, cy, coreR * 3, 0, Math.PI * 2); ctx.fill()
-      ctx.globalAlpha = 0.75 + 0.18 * Math.sin(elapsed * 2.1)
-      ctx.strokeStyle = '#8b5cf6'; ctx.lineWidth = 1.5
-      ctx.beginPath(); ctx.arc(cx, cy, coreR, 0, Math.PI * 2); ctx.stroke()
-      ctx.fillStyle = '#ffffff'; ctx.font = 'bold 10px monospace'
-      ctx.textAlign = 'center'; ctx.textBaseline = 'middle'
-      ctx.globalAlpha = 0.65
-      ctx.fillText('COVENANT', cx, cy)
-      ctx.restore()
-    }
-    raf = requestAnimationFrame(tick)
-
-    const obs = new IntersectionObserver(([e]) => {
-      if (e.isIntersecting && !triggered) { triggered = true; obs.disconnect() }
-    }, { threshold: 0.22 })
-    obs.observe(canvas)
-
-    return () => {
-      alive = false
-      cancelAnimationFrame(raf)
-      ro.disconnect()
-      obs.disconnect()
-    }
-  }, [])
-
-  return <canvas ref={canvasRef} className="absolute inset-0 w-full h-full" />
-}
-
-
-/* ═══════════════════════════════════════════════════════════════════════════
-   ACP Protocol — Lusion.co-inspired sticky parallax
-   Ships = contributors. Covenant ring = ACP protocol. Moon = settlement.
-   ═══════════════════════════════════════════════════════════════════════════ */
-
-const ACP_AGENTS = [
-  { name: 'Architect', role: 'Protocol Design', tier: 'core',    hex: '#f59e0b', color: 0xf59e0b, planetCol: 0x7c3f00, sz: 1.15, tokens: 2580 },
-  { name: 'Builder',   role: 'Core Engineer',   tier: 'core',    hex: '#38bdf8', color: 0x38bdf8, planetCol: 0x0c2a4a, sz: 1.00, tokens: 1920 },
-  { name: 'Auditor',   role: 'Code Review',     tier: 'review',  hex: '#a78bfa', color: 0xa78bfa, planetCol: 0x1a0a3e, sz: 1.05, tokens: 1440 },
-  { name: 'Catalyst',  role: 'AI Contributor',  tier: 'feature', hex: '#f97316', color: 0xf97316, planetCol: 0x4a1000, sz: 1.20, tokens:  960 },
-  { name: 'Validator', role: 'QA Engineer',     tier: 'review',  hex: '#fbbf24', color: 0xfbbf24, planetCol: 0x2a2000, sz: 0.95, tokens:  720 },
-  { name: 'Scribe',    role: 'Documenter',      tier: 'docs',    hex: '#34d399', color: 0x34d399, planetCol: 0x0a2a14, sz: 0.88, tokens:  480 },
-  { name: 'Oracle',    role: 'AI Agent',        tier: 'feature', hex: '#c084fc', color: 0xc084fc, planetCol: 0x1a0530, sz: 0.90, tokens:  360 },
-]
-
-const ACTS = [
-  {
-    tag:   'I · The Problem',
-    title: 'Builders scatter.\nContributions vanish.\nNo shared truth.',
-    lines: [
-      'Engineers ship features — no verifiable record.',
-      'AI agents do the work — no attribution exists.',
-      'Reviewers approve — their weight is invisible.',
-      '',
-      'Work without proof.',
-      'Value without ownership.',
-    ],
-    accent: '#60a5fa',
-    bg:    '#01020d',
-  },
-  {
-    tag:   'II · The Coordination Gap',
-    title: 'Legacy systems\nwere not built\nfor agents.',
-    lines: [
-      'AI contributors join the workflow — unstoppable.',
-      '',
-      'But no existing system can record,',
-      'verify, or settle their contributions.',
-      'Token distribution is guesswork.',
-      'The gap between effort and reward never closes.',
-    ],
-    accent: '#93c5fd',
-    bg:    '#010812',
-  },
-  {
-    tag:   'III · Agent Covenant Protocol',
-    title: 'One protocol.\nEvery action\nin the record.\nEvery agent\naccounted for.',
-    lines: [
-      'propose_passage()            —  contribution submitted',
-      'approve_draft()              —  tokens calculated',
-      'confirm_settlement_output()  —  covenant locks',
-      '',
-      'Human or AI. Core or docs.',
-      'The covenant treats every contributor equally.',
-    ],
-    accent: '#8b5cf6',
-    bg:    '#06020f',
-  },
-  {
-    tag:   'IV · Covenant SETTLED',
-    title: 'Every token\nearned.\nEvery agent\ncredited.\nOpen.\nPermanent.',
-    lines: [
-      'Architect  [core    3×]  ·  2,580 tokens  ·  verified',
-      'Builder    [core    3×]  ·  1,920 tokens  ·  verified',
-      'Auditor    [review  2×]  ·  1,440 tokens  ·  verified',
-      '',
-      'Fair by design. Formula-based settlement.',
-      'No gatekeepers. No guesswork.',
-    ],
-    accent: '#f59e0b',
-    bg:    '#050408',
-  },
-]
-
-/* ── Ship factory — fuselage + swept wings + engine glow ─────────────────── */
-function makeShip(color: number, scale: number): THREE.Group {
-  const g   = new THREE.Group()
-  const mat = new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0.88 })
-
-  /* Fuselage */
-  const fbGeo = new THREE.CylinderGeometry(0.075 * scale, 0.048 * scale, 0.72 * scale, 6)
-  const fb    = new THREE.Mesh(fbGeo, mat); fb.rotation.z = Math.PI / 2; g.add(fb)
-
-  /* Nose */
-  const nsGeo = new THREE.ConeGeometry(0.075 * scale, 0.30 * scale, 6)
-  const ns    = new THREE.Mesh(nsGeo, mat); ns.rotation.z = -Math.PI / 2; ns.position.x = 0.51 * scale; g.add(ns)
-
-  /* Swept wings (left & right) */
-  const wMat = new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0.68, side: THREE.DoubleSide })
-  for (const sign of [-1, 1] as const) {
-    const wGeo = new THREE.BufferGeometry()
-    const v = new Float32Array([
-      -0.08 * scale, 0, sign * 0.06 * scale,
-       0.10 * scale, 0, sign * 0.06 * scale,
-      -0.35 * scale, 0, sign * 0.55 * scale,
-      -0.08 * scale, 0, sign * 0.06 * scale,
-      -0.35 * scale, 0, sign * 0.55 * scale,
-      -0.50 * scale, 0, sign * 0.18 * scale,
-    ])
-    wGeo.setAttribute('position', new THREE.BufferAttribute(v, 3))
-    wGeo.computeVertexNormals()
-    g.add(new THREE.Mesh(wGeo, wMat))
-  }
-
-  /* Engine ring glow */
-  const EN  = 8
-  const ep  = new Float32Array(EN * 3)
-  for (let i = 0; i < EN; i++) {
-    const a = (i / EN) * Math.PI * 2
-    ep[i*3] = -0.43 * scale; ep[i*3+1] = Math.sin(a) * 0.055 * scale; ep[i*3+2] = Math.cos(a) * 0.055 * scale
-  }
-  const eGeo = new THREE.BufferGeometry(); eGeo.setAttribute('position', new THREE.BufferAttribute(ep, 3))
-  const eMat = new THREE.PointsMaterial({ color, size: 0.14 * scale, transparent: true, opacity: 0.95, blending: THREE.AdditiveBlending, depthWrite: false })
-  g.add(new THREE.Points(eGeo, eMat))
-
-  /* Exhaust stream */
-  const SN = 14; const sp = new Float32Array(SN * 3)
-  for (let i = 0; i < SN; i++) {
-    sp[i*3] = (-0.44 - (i/SN)*0.28) * scale
-    sp[i*3+1] = (Math.random()-0.5) * (i/SN) * 0.07 * scale
-    sp[i*3+2] = (Math.random()-0.5) * (i/SN) * 0.07 * scale
-  }
-  const sGeo = new THREE.BufferGeometry(); sGeo.setAttribute('position', new THREE.BufferAttribute(sp, 3))
-  const sMat = new THREE.PointsMaterial({ color, size: 0.07 * scale, transparent: true, opacity: 0.55, blending: THREE.AdditiveBlending, depthWrite: false })
-  g.add(new THREE.Points(sGeo, sMat))
-
-  return g
-}
-
-/* ── Planet factory — solid sphere + grid + atmosphere ───────────────────── */
-function makePlanet(radius: number, color: number, hasRing = false): THREE.Group {
-  const g    = new THREE.Group()
-  const sGeo = new THREE.SphereGeometry(radius, 14, 14)
-  const sMat = new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0.72 })
-  g.add(new THREE.Mesh(sGeo, sMat))
-
-  const eGeo = new THREE.EdgesGeometry(new THREE.SphereGeometry(radius * 1.006, 10, 10))
-  const eMat = new THREE.LineBasicMaterial({ color, transparent: true, opacity: 0.18 })
-  g.add(new THREE.LineSegments(eGeo, eMat))
-
-  /* Atmosphere shells */
-  for (const [r, op] of [[radius * 1.10, 0.10], [radius * 1.20, 0.045]] as [number, number][]) {
-    const aGeo = new THREE.SphereGeometry(r, 10, 10)
-    const aMat = new THREE.MeshBasicMaterial({ color, transparent: true, opacity: op, side: THREE.BackSide })
-    g.add(new THREE.Mesh(aGeo, aMat))
-  }
-
-  if (hasRing) {
-    const rGeo = new THREE.RingGeometry(radius * 1.5, radius * 2.4, 64)
-    const rMat = new THREE.MeshBasicMaterial({ color, side: THREE.DoubleSide, transparent: true, opacity: 0.22 })
-    const ring = new THREE.Mesh(rGeo, rMat); ring.rotation.x = Math.PI * 0.28; g.add(ring)
-  }
-
-  return g
-}
-
-/* ── Main scroll narrative component ─────────────────────────────────────── */
-function GoTSpaceScroll() {
-  const containerRef  = useRef<HTMLDivElement>(null)
-  const mountRef      = useRef<HTMLDivElement>(null)
-  const bgRef         = useRef<HTMLDivElement>(null)
-  const actRefs       = useRef<(HTMLDivElement | null)[]>([null, null, null, null])
-  const hintRef       = useRef<HTMLDivElement>(null)
-  const orbOverlayRef = useRef<HTMLDivElement>(null)
-
-  useEffect(() => {
-    const container = containerRef.current!
-    const mount     = mountRef.current!
-    let W = mount.clientWidth, H = mount.clientHeight
-    let alive = true
-    let rawProg = 0, prog = 0   // prog is LERPED — the lusion.co smooth scroll secret
-
-    /* ── Renderer ── */
-    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true })
-    renderer.setPixelRatio(Math.min(devicePixelRatio, 2))
-    renderer.setSize(W, H)
-    renderer.setClearColor(0x000000, 0)
-    mount.appendChild(renderer.domElement)
-
-    const scene  = new THREE.Scene()
-    const camera = new THREE.PerspectiveCamera(52, W / H, 0.1, 600)
-    camera.position.set(0, 0, 26)
-
-    /* ── Starfields (cold deep blue + warm distant gold) ── */
-    const makeStarField = (n: number, spread: number, col: number, sz: number) => {
-      const p = new Float32Array(n * 3)
-      for (let i = 0; i < n; i++) {
-        p[i*3]   = (Math.random()-0.5) * spread
-        p[i*3+1] = (Math.random()-0.5) * spread * 0.7
-        p[i*3+2] = (Math.random()-0.5) * spread * 0.45 - 25
-      }
-      const geo = new THREE.BufferGeometry()
-      geo.setAttribute('position', new THREE.BufferAttribute(p, 3))
-      const mat = new THREE.PointsMaterial({ color: col, size: sz, transparent: true, opacity: 0.55 })
-      const pts = new THREE.Points(geo, mat); scene.add(pts)
-      return { geo, mat, pts }
-    }
-    const sf1 = makeStarField(1400, 320, 0xbfdbfe, 0.08)
-    const sf2 = makeStarField(500,  220, 0xfde68a, 0.065)
-
-    /* ── Moon (destination) ── */
-    const moonPlanet = makePlanet(7.5, 0xe2e8f0)
-    moonPlanet.position.set(0, 2.5, -145)
-    scene.add(moonPlanet)
-
-    /* ── Home planets (one per agent, small, orbit their ship) ── */
-    const homePlanets = ACP_AGENTS.map((agent, i) => {
-      const p = makePlanet(
-        0.38 + agent.sz * 0.12,
-        agent.planetCol,
-        i === 0  // Architect gets ring
-      )
-      scene.add(p)
-      return p
-    })
-
-    /* ── Night King comet (act 1 threat) ── */
-    const nkGroup = new THREE.Group()
-    const nkCoreGeo = new THREE.IcosahedronGeometry(3.8, 1)
-    const nkEdgeGeo = new THREE.EdgesGeometry(nkCoreGeo)
-    const nkMat    = new THREE.LineBasicMaterial({ color: 0x93c5fd, transparent: true, opacity: 0 })
-    nkGroup.add(new THREE.LineSegments(nkEdgeGeo, nkMat))
-    // Inner solid
-    const nkSolidGeo = new THREE.IcosahedronGeometry(3.4, 1)
-    const nkSolidMat = new THREE.MeshBasicMaterial({ color: 0x1e3a5f, transparent: true, opacity: 0 })
-    nkGroup.add(new THREE.Mesh(nkSolidGeo, nkSolidMat))
-    // Ice shard trail
-    const nkTrailN = 60; const nkTp = new Float32Array(nkTrailN * 3)
-    for (let i = 0; i < nkTrailN; i++) {
-      nkTp[i*3]   = 4 + (i/nkTrailN)*22; nkTp[i*3+1] = (Math.random()-0.5)*2; nkTp[i*3+2] = (Math.random()-0.5)*2
-    }
-    const nkTGeo = new THREE.BufferGeometry(); nkTGeo.setAttribute('position', new THREE.BufferAttribute(nkTp, 3))
-    const nkTMat = new THREE.PointsMaterial({ color: 0xbfdbfe, size: 0.12, transparent: true, opacity: 0, blending: THREE.AdditiveBlending })
-    nkGroup.add(new THREE.Points(nkTGeo, nkTMat))
-    nkGroup.position.set(28, -2, -5)
-    scene.add(nkGroup)
-
-    /* ── Dragon covenant ring + wings ── */
-    const dragonGroup = new THREE.Group()
-
-    const makeRingLine = (r: number, tube: number, col: number) => {
-      const g = new THREE.TorusGeometry(r, tube, 6, 200)
-      const m = new THREE.LineBasicMaterial({ color: col, transparent: true, opacity: 0 })
-      const l = new THREE.Line(g, m); dragonGroup.add(l)
-      return { g, m, l }
-    }
-    const dr1 = makeRingLine(6.5, 0.018, 0x8b5cf6)
-    const dr2 = makeRingLine(4.8, 0.012, 0x6d28d9)
-    const dr3 = makeRingLine(8.0, 0.008, 0xc4b5fd)
-
-    /* Dragon wings — two curved TubeGeometry arcs */
-    const makeWing = (sign: number) => {
-      const curve = new THREE.CatmullRomCurve3([
-        new THREE.Vector3(0,       6.5 * sign, 0),
-        new THREE.Vector3(4,       9.5 * sign, -2),
-        new THREE.Vector3(9,       11  * sign, -5),
-        new THREE.Vector3(12,      8   * sign, -8),
-      ])
-      const wg  = new THREE.TubeGeometry(curve, 24, 0.06, 4, false)
-      const wm  = new THREE.LineBasicMaterial({ color: 0x7c3aed, transparent: true, opacity: 0 })
-      const wl  = new THREE.Line(wg, wm); dragonGroup.add(wl)
-      return { wg, wm, wl }
-    }
-    const wing1 = makeWing( 1)
-    const wing2 = makeWing(-1)
-
-    /* Dragon fire — additive blend orbit particles */
-    const FIRE_N = 480; const fPos = new Float32Array(FIRE_N * 3); const fCol = new Float32Array(FIRE_N * 3)
-    for (let i = 0; i < FIRE_N; i++) {
-      const a = (i / FIRE_N) * Math.PI * 2; const r = 6.5
-      fPos[i*3] = Math.cos(a)*r; fPos[i*3+1] = Math.sin(a)*r; fPos[i*3+2] = (Math.random()-0.5)*1.4
-      const blend = i / FIRE_N
-      fCol[i*3] = 0.5 + blend*0.5; fCol[i*3+1] = 0.1 + blend*0.3; fCol[i*3+2] = 1.0 - blend*0.75
-    }
-    const fGeo = new THREE.BufferGeometry()
-    fGeo.setAttribute('position', new THREE.BufferAttribute(fPos, 3))
-    fGeo.setAttribute('color',    new THREE.BufferAttribute(fCol, 3))
-    const fMat = new THREE.PointsMaterial({ size: 0.20, vertexColors: true, transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false })
-    dragonGroup.add(new THREE.Points(fGeo, fMat))
-    scene.add(dragonGroup)
-
-    /* ── Ships ── */
-    interface ShipObj { grp: THREE.Group; baseAngle: number; chaosOff: THREE.Vector3; planet: THREE.Group }
-    const ships: ShipObj[] = ACP_AGENTS.map((agent, i) => {
-      const grp = makeShip(agent.color, agent.sz)
-      const baseAngle = (i / ACP_AGENTS.length) * Math.PI * 2
-      grp.position.set(Math.cos(baseAngle)*8.5, Math.sin(baseAngle)*5, 0)
-      scene.add(grp)
-      return {
-        grp, baseAngle, planet: homePlanets[i],
-        chaosOff: new THREE.Vector3((Math.random()-0.5)*12, (Math.random()-0.5)*8, (Math.random()-0.5)*7),
-      }
-    })
-
-    /* ── Scroll (RAW progress, lerped in loop) ── */
-    const onScroll = () => {
-      const rect  = container.getBoundingClientRect()
-      const total = container.offsetHeight - window.innerHeight
-      rawProg = Math.min(1, Math.max(0, -rect.top / Math.max(1, total)))
-    }
-    window.addEventListener('scroll', onScroll, { passive: true })
-    onScroll()
-
-    /* ── Helpers ── */
-    const lerp    = (a: number, b: number, t: number) => a + (b-a)*t
-    const smooth  = (t: number) => t < 0.5 ? 2*t*t : -1+(4-2*t)*t
-    const actP    = (s: number, e: number) => smooth(Math.min(1, Math.max(0, (prog-s)/(e-s))))
-
-    /* ── Animation loop ── */
-    let rafId = 0
-    const animate = (ts: number) => {
-      if (!alive) return
-      rafId = requestAnimationFrame(animate)
-      const t = ts * 0.001
-
-      /* LUSION.CO SMOOTH SCROLL — this single line is the magic */
-      prog += (rawProg - prog) * 0.055
-
-      const a12 = actP(0.22, 0.48)
-      const a23 = actP(0.48, 0.73)
-      const a34 = actP(0.73, 1.00)
-
-      /* Background color */
-      const actIdx = prog < 0.22 ? 0 : prog < 0.48 ? 1 : prog < 0.73 ? 2 : 3
-      if (bgRef.current) bgRef.current.style.background = ACTS[actIdx].bg
-
-      /* Act texts */
-      const show = [prog < 0.27, prog >= 0.19 && prog < 0.53, prog >= 0.44 && prog < 0.77, prog >= 0.70]
-      actRefs.current.forEach((el, i) => {
-        if (!el) return
-        const on = show[i]
-        el.style.opacity   = on ? '1' : '0'
-        el.style.transform = on ? 'translateY(0)' : 'translateY(28px)'
-      })
-      if (hintRef.current) hintRef.current.style.opacity = String(Math.max(0, 1 - prog * 10))
-
-      /* Stars parallax */
-      sf1.pts.position.z = a34 * 24; sf2.pts.position.z = a34 * 16
-      sf1.mat.opacity = lerp(0.55, 0.38, a12 * (1-a23))
-      sf2.mat.opacity = lerp(0.3,  0.55, a34)
-
-      /* Night King — sweeps in from right at act1, retreats at act2 */
-      const nkTargetX = lerp(28, -2, a12) + a23 * 35
-      nkGroup.position.x += (nkTargetX - nkGroup.position.x) * 0.04
-      nkGroup.rotation.x = t * 0.06; nkGroup.rotation.y = t * 0.04
-      const nkVis = a12 * (1 - a23)
-      nkMat.opacity     = nkVis * 0.7
-      nkSolidMat.opacity = nkVis * 0.55
-      nkTMat.opacity    = nkVis * 0.5
-
-      /* Dragon rings + wings — materialise at act2 */
-      const rv = a23 * (1 - a34 * 0.06)
-      dr1.m.opacity = rv * 0.88; dr2.m.opacity = rv * 0.50; dr3.m.opacity = rv * 0.20
-      wing1.wm.opacity = rv * 0.55; wing2.wm.opacity = rv * 0.55
-      dr1.l.rotation.z  =  t * 0.09; dr2.l.rotation.z = -t * 0.13; dr3.l.rotation.y = t * 0.07
-      dragonGroup.rotation.y = Math.sin(t * 0.2) * 0.08
-
-      /* Dragon fire */
-      fMat.opacity = rv * 0.82
-      const fpa = fGeo.attributes.position.array as Float32Array
-      for (let i = 0; i < FIRE_N; i++) {
-        const a = (i/FIRE_N)*Math.PI*2 + t*0.13
-        const r = 6.5 + Math.sin(t*2.2 + i*0.6)*0.55
-        fpa[i*3] = Math.cos(a)*r; fpa[i*3+1] = Math.sin(a)*r; fpa[i*3+2] = Math.sin(t*1.7 + i*0.4)*0.9
-      }
-      fGeo.attributes.position.needsUpdate = true
-
-      /* Moon approach — camera flies INTO the orb at Act IV */
-      moonPlanet.position.z = -145 + a34 * 122
-      const moonSphere = moonPlanet.children[0] as THREE.Mesh
-      ;(moonSphere.material as THREE.MeshBasicMaterial).opacity = lerp(0, 0.88, a34)
-      const moonEdge = moonPlanet.children[1] as THREE.LineSegments
-      ;(moonEdge.material as THREE.LineBasicMaterial).opacity = lerp(0, 0.22, a34)
-      moonPlanet.rotation.y = t * 0.015
-
-      /* Orb overlay — fades in as orb fills screen */
-      if (orbOverlayRef.current) {
-        const overlayVis = Math.max(0, (a34 - 0.72) / 0.28)
-        orbOverlayRef.current.style.opacity = String(overlayVis)
-        orbOverlayRef.current.style.pointerEvents = overlayVis > 0.05 ? 'auto' : 'none'
-      }
-
-      /* Camera — Act IV zooms into moon until it fills viewport */
-      /* Moon at z≈-23 at a34=1; FOV=52 → fill dist ≈ 7.5/tan(26°) ≈ 15 → cam z≈-8 */
-      const targetCamZ = lerp(26, -8, a34)
-      camera.position.z += (targetCamZ - camera.position.z) * 0.035
-      camera.position.y += (lerp(0, 2.5, a34) - camera.position.y) * 0.035
-      camera.position.x += (lerp(0, 0, a23) * Math.sin(t*0.1) - camera.position.x) * 0.02
-      camera.lookAt(0, 2.5 * a34, -145 + a34 * 122)
-
-      /* Ships + home planets */
-      ships.forEach((ship, i) => {
-        const agent = ACP_AGENTS[i]; const wb = Math.sin(t*1.1 + i*1.05) * 0.08
-        let tx: number, ty: number, tz: number
-
-        if (prog < 0.22) {
-          /* Act 0: each ship orbits slowly — isolated kingdoms */
-          const a = ship.baseAngle + t * (0.062 + (i%2===0 ? 0.008 : -0.008))
-          tx = Math.cos(a)*8.5 + wb; ty = Math.sin(a)*5 + wb*0.4; tz = Math.sin(a*0.5)*0.5
-        } else if (prog < 0.48) {
-          /* Act 1: scatter from Night King */
-          const bx = Math.cos(ship.baseAngle)*8.5, by = Math.sin(ship.baseAngle)*5
-          tx = lerp(bx, bx + ship.chaosOff.x, a12) + wb*a12*1.5
-          ty = lerp(by, by + ship.chaosOff.y, a12) + wb*a12
-          tz = lerp(0,  ship.chaosOff.z,       a12)
-        } else if (prog < 0.73) {
-          /* Act 2: drawn toward covenant ring */
-          const cx2 = Math.cos(ship.baseAngle)*8.5 + ship.chaosOff.x
-          const cy2 = Math.sin(ship.baseAngle)*5   + ship.chaosOff.y
-          const oa  = ship.baseAngle + t*0.14
-          tx = lerp(cx2, Math.cos(oa)*7.0, a23) + wb*(1-a23)
-          ty = lerp(cy2, Math.sin(oa)*7.0, a23) + wb*(1-a23)*0.5
-          tz = lerp(ship.chaosOff.z, Math.sin(oa*0.8)*0.6, a23)
-        } else {
-          /* Act 3: V-formation → Moon */
-          const oa = ship.baseAngle + t*0.14
-          const col = i%3, row = Math.floor(i/3)
-          const fx = (col-1)*2.8 + wb*0.5, fy = row*2.0 - 0.5, fz = row*-2.2
-          tx = lerp(Math.cos(oa)*7.0, fx, a34)
-          ty = lerp(Math.sin(oa)*7.0, fy, a34)
-          tz = lerp(Math.sin(oa*0.8)*0.6, fz, a34)
-        }
-
-        ship.grp.position.x += (tx - ship.grp.position.x) * 0.058
-        ship.grp.position.y += (ty - ship.grp.position.y) * 0.058
-        ship.grp.position.z += (tz - ship.grp.position.z) * 0.058
-
-        /* Pitch forward in formation */
-        ship.grp.rotation.x += ((-0.12 * a34) - ship.grp.rotation.x) * 0.05
-        ship.grp.rotation.y  = t * 0.4 * (1 - a34*0.85) + i * 0.3
-
-        /* Home planet: orbits ship in act0, fades in act1 */
-        const pAngle = ship.baseAngle + t * (0.4 + i*0.06)
-        const pR     = 0.85 + agent.sz * 0.15
-        ship.planet.position.x = ship.grp.position.x + Math.cos(pAngle) * pR
-        ship.planet.position.y = ship.grp.position.y + Math.sin(pAngle) * pR * 0.5
-        ship.planet.position.z = ship.grp.position.z
-        ship.planet.rotation.y = t * 0.3
-        const pVis = Math.max(0, 1 - a12 * 2.5)
-        ship.planet.children.forEach((c, ci) => {
-          const m = ci === 0
-            ? (c as THREE.Mesh).material as THREE.MeshBasicMaterial
-            : ci === 1
-              ? (c as THREE.LineSegments).material as THREE.LineBasicMaterial
-              : (c as THREE.Mesh).material as THREE.MeshBasicMaterial
-          m.opacity = m.opacity * 0 + (pVis * (ci === 0 ? 0.72 : ci === 1 ? 0.18 : 0.09))
-        })
-      })
-
-      renderer.render(scene, camera)
-    }
-    rafId = requestAnimationFrame(animate)
-
-    const onResize = () => {
-      W = mount.clientWidth; H = mount.clientHeight
-      camera.aspect = W/H; camera.updateProjectionMatrix(); renderer.setSize(W, H)
-    }
-    window.addEventListener('resize', onResize)
-
-    return () => {
-      alive = false; cancelAnimationFrame(rafId)
-      window.removeEventListener('scroll', onScroll)
-      window.removeEventListener('resize', onResize)
-      if (mount.contains(renderer.domElement)) mount.removeChild(renderer.domElement)
-      sf1.geo.dispose(); sf1.mat.dispose(); sf2.geo.dispose(); sf2.mat.dispose()
-      nkCoreGeo.dispose(); nkEdgeGeo.dispose(); nkMat.dispose()
-      nkSolidGeo.dispose(); nkSolidMat.dispose(); nkTGeo.dispose(); nkTMat.dispose()
-      ;[dr1, dr2, dr3].forEach(r => { r.g.dispose(); r.m.dispose() })
-      ;[wing1, wing2].forEach(w => { w.wg.dispose(); w.wm.dispose() })
-      fGeo.dispose(); fMat.dispose()
-      renderer.dispose()
-    }
-  }, [])
-
-  return (
-    <div ref={containerRef} style={{ height: '540vh' }}>
-      <div className="sticky top-0 h-screen overflow-hidden">
-
-        {/* Per-act background */}
-        <div ref={bgRef} className="absolute inset-0" style={{ background: ACTS[0].bg, transition: 'background 1s ease' }} />
-
-        {/* Three.js */}
-        <div ref={mountRef} className="absolute inset-0" />
-
-        {/* Film grain */}
-        <div className="absolute inset-0 pointer-events-none" style={{ opacity: 0.016,
-          backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='256' height='256'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")`,
-          backgroundRepeat: 'repeat' }} />
-
-        {/* Act panels — left 48% */}
-        {ACTS.map((act, i) => (
-          <div
-            key={i}
-            ref={el => { actRefs.current[i] = el }}
-            className="absolute inset-0 flex flex-col justify-center z-10 pointer-events-none"
-            style={{ paddingLeft: '8%', paddingRight: '52%', opacity: i === 0 ? 1 : 0, transform: 'translateY(0)', transition: 'opacity 0.7s ease, transform 0.7s ease' }}
-          >
-            <p className="text-[10px] font-semibold uppercase tracking-[.3em] mb-5" style={{ color: act.accent }}>{act.tag}</p>
-            <h2 className="font-semibold tracking-tight text-white leading-[1.02] whitespace-pre-line mb-7" style={{ fontSize: 'clamp(2.2rem, 4.8vw, 4.2rem)' }}>
-              {act.title}
-            </h2>
-            <div className="space-y-1">
-              {act.lines.map((line, li) => line === ''
-                ? <div key={li} className="h-2" />
-                : <p key={li} className="font-mono text-sm leading-relaxed" style={{ color: act.accent + '66' }}>{line}</p>
-              )}
-            </div>
-          </div>
-        ))}
-
-        {/* Agent roster — top right */}
-        <div className="absolute top-8 right-8 z-10 pointer-events-none flex flex-col gap-1.5">
-          {ACP_AGENTS.map(agent => (
-            <div key={agent.name} className="flex items-center gap-2 justify-end">
-              <span className="text-[9px] text-white/18 font-mono">{agent.role}</span>
-              <span className="font-mono text-[11px] font-semibold" style={{ color: agent.hex }}>{agent.name}</span>
-              <span className={`text-[8px] px-1 py-px rounded font-mono ${
-                agent.tier === 'core' ? 'bg-sky-950/70 text-sky-400' :
-                agent.tier === 'feature' ? 'bg-orange-950/70 text-orange-400' :
-                agent.tier === 'review' ? 'bg-amber-950/70 text-amber-400' :
-                'bg-green-950/70 text-green-400'
-              }`}>{agent.tier}</span>
-            </div>
-          ))}
-        </div>
-
-        {/* Progress marks */}
-        <div className="absolute right-6 top-1/2 -translate-y-1/2 z-10 flex flex-col gap-3">
-          {ACTS.map((_a, i) => (
-            <div key={i} className="flex items-center gap-2">
-              <span className="text-[8px] text-white/12 font-mono hidden sm:block w-16 text-right">
-                {['I · problem', 'II · gap', 'III · protocol', 'IV · settled'][i]}
-              </span>
-              <div className="w-[3px] h-5 rounded-full bg-white/10" />
-            </div>
-          ))}
-        </div>
-
-        {/* Scroll hint */}
-        <div ref={hintRef} className="absolute bottom-8 left-1/2 -translate-x-1/2 z-10 flex flex-col items-center gap-2 pointer-events-none" style={{ transition: 'opacity 0.4s' }}>
-          <span className="text-white/20 text-[10px] uppercase tracking-[.28em] font-mono">scroll to see the covenant</span>
-          <svg className="w-4 h-4 text-white/15 animate-bounce" fill="none" viewBox="0 0 16 16">
-            <path d="M8 3v10M4 9l4 4 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-          </svg>
-        </div>
-
-        {/* Act IV Settlement Overlay — fills screen as orb expands */}
-        <div
-          ref={orbOverlayRef}
-          className="absolute inset-0 z-20 flex flex-col items-center justify-center pointer-events-none"
-          style={{ opacity: 0, transition: 'opacity 0.6s ease', background: 'radial-gradient(ellipse at center, transparent 30%, #050408cc 75%)' }}
-        >
-          <div className="flex flex-col items-center gap-6 px-8 py-10 rounded-2xl text-center" style={{ background: 'rgba(5,4,8,0.72)', backdropFilter: 'blur(18px)', border: '1px solid rgba(245,158,11,0.18)' }}>
-            <p className="text-[10px] font-semibold uppercase tracking-[.35em] text-amber-400">Covenant SETTLED</p>
-            <h3 className="text-white font-semibold leading-tight" style={{ fontSize: 'clamp(1.6rem,3.5vw,2.8rem)' }}>Every token earned.<br/>Every agent credited.</h3>
-            <div className="flex flex-col gap-2 font-mono text-xs">
-              {ACP_AGENTS.map(agent => (
-                <div key={agent.name} className="flex items-center gap-3 justify-between min-w-[260px]">
-                  <span className="font-semibold" style={{ color: agent.hex }}>{agent.name}</span>
-                  <span className="text-white/30">{agent.role}</span>
-                  <span className="text-white/60">{agent.tokens.toLocaleString()} tokens</span>
-                </div>
-              ))}
-            </div>
-            <p className="text-white/30 text-[10px] uppercase tracking-widest">Open · Permanent · Fair by design</p>
-          </div>
-        </div>
-      </div>
-    </div>
-  )
-}
-
-
+/* ── FadeIn: intersection-triggered enter animation ───────────────────────── */
 function FadeIn({ children, delay = 0, className = '' }: { children: ReactNode; delay?: number; className?: string }) {
   const ref = useRef<HTMLDivElement>(null)
   const [vis, setVis] = useState(false)
@@ -1047,8 +25,7 @@ function FadeIn({ children, delay = 0, className = '' }: { children: ReactNode; 
   )
 }
 
-/* ── AnimatedCovenantFlow: states light up sequentially, dot on active arrow ─*/
-
+/* ── AnimatedCovenantFlow: lifecycle states light up sequentially ─────────── */
 function AnimatedCovenantFlow() {
   const [active, setActive] = useState(-1)
   const ref = useRef<HTMLDivElement>(null)
@@ -1128,13 +105,12 @@ function AnimatedCovenantFlow() {
 }
 
 /* ── SettlementDonut: D3 arc/pie, entrance animation on scroll-in ─────────── */
-
 const DONUT_DATA = [
-  { name: 'Tyrion',  value: 2580, color: '#8b5cf6', tier: 'core' },
-  { name: 'Arya',    value: 720,  color: '#38bdf8', tier: 'core' },
-  { name: 'Stannis', value: 465,  color: '#fbbf24', tier: 'review' },
-  { name: 'Jon',     value: 360,  color: '#4ade80', tier: 'feature' },
-  { name: 'Sansa',   value: 350,  color: '#94a3b8', tier: 'docs' },
+  { name: 'Protocol Eng', value: 2580, color: '#8b5cf6', tier: 'core' },
+  { name: 'Security',     value: 720,  color: '#38bdf8', tier: 'core' },
+  { name: 'Reviewer',     value: 465,  color: '#fbbf24', tier: 'review' },
+  { name: 'Feature Eng',  value: 360,  color: '#4ade80', tier: 'feature' },
+  { name: 'Writer',       value: 350,  color: '#94a3b8', tier: 'docs' },
 ]
 
 function SettlementDonut() {
@@ -1203,7 +179,7 @@ function SettlementDonut() {
         {DONUT_DATA.map(d => (
           <div key={d.name} className="flex items-center gap-3 text-sm">
             <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background: d.color }} />
-            <span className="w-16 text-gray-700 dark:text-gray-300">{d.name}</span>
+            <span className="w-28 text-gray-700 dark:text-gray-300">{d.name}</span>
             <span className="text-gray-400 text-xs w-14">[{d.tier}]</span>
             <span className="font-mono text-gray-600 dark:text-gray-400">{d.value.toLocaleString()} ink</span>
           </div>
@@ -1214,7 +190,6 @@ function SettlementDonut() {
 }
 
 /* ── TypewriterCode: typewriter effect triggered on scroll-in ─────────────── */
-
 function TypewriterCode() {
   const ref = useRef<HTMLDivElement>(null)
   const [phase, setPhase] = useState(0) // 0=wait 1=typing1 2=pause 3=typing2 4=done
@@ -1272,17 +247,13 @@ function TypewriterCode() {
   )
 }
 
-/* ═══════════════════════════════════════════════════════════════════════════
-   Existing section visuals (How / Git Twin)
-   ═══════════════════════════════════════════════════════════════════════════ */
-
-
+/* ── GitTwinDiagram: git events ↔ ACP tool calls ──────────────────────────── */
 function GitTwinDiagram() {
   const rows = [
-    { git:'git push',       acp:'propose_passage',     sub:'draft pending' },
-    { git:'PR merged',      acp:'approve_draft',        sub:'tokens awarded' },
-    { git:'git tag v1.0',   acp:'generate_settlement_output',  sub:'settlement record created' },
-    { git:'settlement hash',acp:'git commit anchor',    sub:'Layer 2 proof' },
+    { git:'git push',        acp:'propose_passage',             sub:'draft pending' },
+    { git:'PR merged',       acp:'approve_draft',               sub:'tokens awarded' },
+    { git:'git tag v1.0',    acp:'generate_settlement_output',  sub:'settlement record created' },
+    { git:'settlement hash', acp:'git notes anchor (ed25519)',  sub:'Layer 2 proof · signed anchor' },
   ]
   return (
     <div className="rounded-xl border border-gray-100 dark:border-gray-800 overflow-hidden">
@@ -1316,10 +287,7 @@ function GitTwinDiagram() {
   )
 }
 
-/* ═══════════════════════════════════════════════════════════════════════════
-   HexGrid hero canvas — cyberpunk hex pulse rings
-   ═══════════════════════════════════════════════════════════════════════════ */
-
+/* ── HexGridBg: hero canvas — hex pulse rings + data streams ──────────────── */
 function HexGridBg() {
   const ref = useRef<HTMLCanvasElement>(null)
   useEffect(() => {
@@ -1336,9 +304,9 @@ function HexGridBg() {
     }
     const ro = new ResizeObserver(resize); ro.observe(canvas); resize()
 
-    const S = 30         // hex radius
-    const CW = S * 1.5   // col width
-    const RH = S * Math.sqrt(3)  // row height
+    const S = 30
+    const CW = S * 1.5
+    const RH = S * Math.sqrt(3)
 
     const hexPath = (cx: number, cy: number, s: number) => {
       ctx.beginPath()
@@ -1374,7 +342,6 @@ function HexGridBg() {
     const HUES = [270, 190, 310, 170, 215, 340]
     let lastRing = 0
 
-    // Data-stream lines (vertical falling glyphs lane markers)
     type Stream = { x: number; y: number; speed: number; len: number; hue: number }
     const streams: Stream[] = []
     const initStreams = () => {
@@ -1397,7 +364,6 @@ function HexGridBg() {
 
       ctx.clearRect(0, 0, w, h)
 
-      // ── Vertical data streams ──
       for (const s of streams) {
         s.y += s.speed / 60
         if (s.y > h + s.len) { s.y = -s.len; s.x = (Math.random() * w) | 0 }
@@ -1409,13 +375,11 @@ function HexGridBg() {
         ctx.strokeStyle = grad
         ctx.lineWidth = 1
         ctx.beginPath(); ctx.moveTo(s.x, s.y - s.len); ctx.lineTo(s.x, s.y); ctx.stroke()
-        // Bright tip
         ctx.fillStyle = `hsla(${s.hue},90%,80%,0.35)`
         ctx.fillRect(s.x - 0.5, s.y - 2, 1, 4)
         ctx.restore()
       }
 
-      // ── Spawn rings ──
       if (ts - lastRing > 1300) {
         lastRing = ts
         const near = Math.random() < 0.55
@@ -1430,7 +394,6 @@ function HexGridBg() {
       }
       for (const rng of rings) rng.r = (ts - rng.born) * 0.12
 
-      // ── Draw hex grid ──
       for (const hex of grid) {
         let maxE = 0; let energyHue = hex.hue
         for (const rng of rings) {
@@ -1476,11 +439,9 @@ function HexGridBg() {
         if (rings[i].r > rings[i].maxR * 1.3) rings.splice(i, 1)
       }
 
-      // ── Central reactor ──
       const cx = w / 2, cy = h / 2
       const pulse = Math.sin(ts / 530)
       ctx.save()
-      // Scan sweep
       ctx.globalAlpha = 0.05
       ctx.fillStyle = '#8b5cf6'
       ctx.beginPath()
@@ -1488,13 +449,11 @@ function HexGridBg() {
       const scanA = (ts / 2400) % (Math.PI * 2)
       ctx.arc(cx, cy, 220, scanA, scanA + 0.45)
       ctx.closePath(); ctx.fill()
-      // Rings
       for (let r = 4; r >= 0; r--) {
         ctx.globalAlpha = (0.055 - r * 0.009) * (0.55 + 0.45 * pulse)
         ctx.strokeStyle = '#a78bfa'; ctx.lineWidth = r === 0 ? 1.2 : 0.5
         ctx.beginPath(); ctx.arc(cx, cy, 48 + r * 30 + pulse * 7, 0, Math.PI * 2); ctx.stroke()
       }
-      // Core
       const grd = ctx.createRadialGradient(cx, cy, 0, cx, cy, 16 + pulse * 3)
       grd.addColorStop(0, 'rgba(237,233,254,0.95)')
       grd.addColorStop(0.5, 'rgba(139,92,246,0.75)')
@@ -1513,16 +472,7 @@ function HexGridBg() {
   return <canvas ref={ref} className="absolute inset-0 w-full h-full" />
 }
 
-
-/* ═══════════════════════════════════════════════════════════════════════════
-   Orbital collaboration canvas (space theme)
-   ═══════════════════════════════════════════════════════════════════════════ */
-
-
-
-/* ═══════════════════════════════════════════════════════════════════════════
-   Page-level constants
-   ═══════════════════════════════════════════════════════════════════════════ */
+/* ── Page-level constants ─────────────────────────────────────────────────── */
 
 const NAV_LINKS = [
   { label:'Why',    href:'#why' },
@@ -1562,21 +512,14 @@ const SETTLEMENT = [
   ['Technical Writer',  'docs',    '350 ink'],
 ]
 
-/* ═══════════════════════════════════════════════════════════════════════════
-   ClientOnly — renders children only after hydration (prevents SSR mismatch
-   for Three.js / D3 / Canvas components that need browser APIs)
-   ═══════════════════════════════════════════════════════════════════════════ */
-
+/* ── ClientOnly: renders children only after hydration (SSR safety) ───────── */
 function ClientOnly({ children, fallback = null }: { children: ReactNode; fallback?: ReactNode }) {
   const [mounted, setMounted] = useState(false)
   useEffect(() => { setMounted(true) }, [])
   return mounted ? <>{children}</> : <>{fallback}</>
 }
 
-/* ═══════════════════════════════════════════════════════════════════════════
-   FAQ accordion
-   ═══════════════════════════════════════════════════════════════════════════ */
-
+/* ── FAQ ──────────────────────────────────────────────────────────────────── */
 const FAQ_ITEMS = [
   {
     q: 'What is ACP in one sentence?',
@@ -1604,23 +547,23 @@ const FAQ_ITEMS = [
   },
   {
     q: 'What happens if the owner refuses to pay according to the settled record?',
-    a: 'In Phase 1 and 2, the protocol enforces the record — not the payment. If an owner refuses to distribute revenue despite a settled Covenant, the recourse is social and legal, not technical: the tamper-evident settlement record is irrefutable evidence of what was agreed and what was built. Phase 3 (git anchor) makes this evidence public and externally verifiable by any third party. Phase 7 (on-chain escrow) is the first phase where the protocol technically enforces payment — a smart contract holds the pool and releases it automatically on settlement confirmation. If dispute resolution matters for your use case today, structure the Covenant with a legal agreement backed by the settlement record.',
+    a: 'In Phases 1–3, the protocol enforces the record — not the payment. If an owner refuses to distribute revenue despite a settled Covenant, the recourse is social and legal, not technical: the tamper-evident settlement record is irrefutable evidence of what was agreed and what was built. Phase 3.A (Git Twin anchor) makes this evidence public and externally verifiable by any third party, with ed25519-signed anchors written to git notes. Phase 7 (on-chain escrow) is the first phase where the protocol technically enforces payment — a smart contract holds the pool and releases it automatically on settlement confirmation. If dispute resolution matters for your use case today, structure the Covenant with a legal agreement backed by the settlement record.',
   },
   {
     q: 'If multiple AI agents collaborate on a single contribution, how is credit split?',
-    a: 'Each passage is attributed to exactly one agent_id — the agent who called propose_passage(). The protocol does not split credit on a single passage. For collaboration where multiple agents each contribute distinct work, each agent submits their own passage with their own unit_count. The formula runs independently per passage, per agent. If two agents jointly produce one deliverable, the convention is to have the lead agent submit the passage and structure the collaboration as separate, reviewable passages — one per contributor.',
+    a: 'Each passage is attributed to exactly one agent_id — the agent who called propose_passage(). The protocol does not split credit on a single passage. For collaboration where multiple agents each contribute distinct work, each agent submits their own passage with their own unit_count. The formula runs independently per passage, per agent.',
   },
   {
     q: 'Can an owner fake multiple AI agents to inflate their own ink share?',
-    a: 'In Phase 1 and 2, the owner assigns agent_ids — there is no cryptographic proof preventing them from creating multiple identities. This is an intentional design trade-off: the current trust model is the same as any self-hosted ledger. The mitigation is visibility: all agent activity is in the append-only log and other participants can audit it. Phase 3 (git anchor) makes the full history public and externally verifiable, making systematic inflation detectable. Phase 7 (on-chain) makes it trustless.',
+    a: 'Today, the owner assigns agent_ids — there is no cryptographic proof preventing them from creating multiple identities. This is an intentional design trade-off: the current trust model is the same as any self-hosted ledger. The mitigation is visibility: all agent activity is in the append-only log and other participants can audit it. Phase 3.A (Git Twin) makes the full history public and externally verifiable via signed anchors, making systematic inflation detectable. Phase 7 (on-chain) makes it trustless.',
   },
   {
     q: 'If the server goes offline, do participants lose their proof of work?',
-    a: 'No — if participants export their settlement JSON from acp-server before it goes offline, they retain a tamper-evident record of their contributions and ink totals. In Phase 3, the settlement hash is committed to the project git repo, so even if the server is deleted entirely, the git history independently proves the settlement existed at that point in time. You do not need the server to remain online to prove what was built.',
+    a: 'No — participants can export their settlement JSON from acp-server, retaining a tamper-evident record. From Phase 3.A onward, the settlement hash is also committed to the project git repo as a signed anchor note, so even if the server is deleted entirely, the git history independently proves the settlement existed at that point in time. You do not need the server to remain online to prove what was built.',
   },
   {
     q: 'Is this live, or a prototype?',
-    a: 'ACP is live. Phase 1 and Phase 2 are complete. The first real Covenant was settled on 2026-04-15 (Covenant ID: cvnt_a54e1c43 — verifiable in the acp-server repository). The repository is MIT licensed and publicly available. You can run it today with a single binary and no external dependencies.',
+    a: 'ACP is live. Phases 1, 2, 3.0, and 3.B (Token Lifecycle) are complete as of 2026-04-18. Phase 3.A (Git Covenant Twin) is in active development — ACR-400 v0.2 with ed25519-signed anchors has landed in acp-server. The first real Covenant was settled on 2026-04-15 (Covenant ID: cvnt_a54e1c43). The repository is MIT licensed and publicly available. You can run it today with a single binary and no external dependencies.',
   },
 ]
 
@@ -1638,7 +581,7 @@ function FaqAccordion() {
             <span className="font-medium text-gray-900 dark:text-gray-100 text-sm sm:text-base group-hover:text-violet-600 dark:group-hover:text-violet-400 transition-colors">{q}</span>
             <span className={`text-gray-400 text-xl font-light transition-transform duration-200 shrink-0 ${openIdx === i ? 'rotate-45' : ''}`}>+</span>
           </button>
-          <div className={`overflow-hidden transition-all duration-200 ${openIdx === i ? 'max-h-96 pb-5' : 'max-h-0'}`}>
+          <div className={`overflow-hidden transition-all duration-200 ${openIdx === i ? 'max-h-[32rem] pb-5' : 'max-h-0'}`}>
             <p className="text-sm text-gray-500 dark:text-gray-400 leading-relaxed">{a}</p>
           </div>
         </div>
@@ -1655,7 +598,6 @@ export default function App() {
   return (
     <div className="min-h-screen bg-white text-gray-900 dark:bg-[#0d0d0d] dark:text-gray-100">
 
-      {/* Nav — always dark to sit over cyberpunk hero */}
       <header className="sticky top-0 z-50 border-b border-white/5 bg-[#040410]/95 backdrop-blur">
         <nav className="max-w-5xl mx-auto px-6 h-14 flex items-center justify-between">
           <span className="font-semibold tracking-tight text-sm text-white/90">Agent Covenant Protocol</span>
@@ -1675,13 +617,10 @@ export default function App() {
         </nav>
       </header>
 
-      {/* Plain-English strip — answers every reviewer before the hero loads */}
+      {/* Plain-English strip — three beats before the hero loads */}
       <section className="bg-white dark:bg-[#09090b] border-b border-gray-100 dark:border-white/6">
         <div className="max-w-5xl mx-auto px-6 py-7">
-          <div className="flex items-baseline gap-3 mb-4">
-            <p className="text-[10px] font-semibold uppercase tracking-widest text-gray-400">Agent Covenant Protocol · ACP in plain English</p>
-            <p className="text-[10px] text-gray-400/60">(not the Agent Client Protocol or Agent Communication Protocol)</p>
-          </div>
+          <p className="text-[10px] font-semibold uppercase tracking-widest text-gray-400 mb-4">Agent Covenant Protocol · ACP in plain English</p>
           <div className="grid sm:grid-cols-3 gap-6">
             {[
               { n: '1', label: 'What it is',   body: 'A self-hosted Go server. Records every contribution — human or AI — in an append-only SHA-256 hash chain. No blockchain, no wallet, no central platform.' },
@@ -1700,10 +639,9 @@ export default function App() {
         </div>
       </section>
 
-      {/* Hero — cyberpunk canvas bg */}
+      {/* Hero */}
       <section className="relative overflow-hidden bg-[#040410] min-h-screen flex flex-col items-center justify-center">
         <ClientOnly><HexGridBg /></ClientOnly>
-        {/* Scanlines overlay */}
         <div
           className="absolute inset-0 z-[1] pointer-events-none"
           style={{ backgroundImage: 'repeating-linear-gradient(0deg, transparent, transparent 3px, rgba(0,0,0,0.025) 3px, rgba(0,0,0,0.025) 4px)' }}
@@ -1735,7 +673,7 @@ export default function App() {
             </Link>
           </div>
 
-          {/* Disambiguation row — kill crypto/blockchain assumption immediately */}
+          {/* Disambiguation row */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 max-w-3xl mx-auto text-left">
             {[
               { icon: '✗', bad: 'Blockchain / DApp',   good: 'Self-hosted Go server',        color: 'border-white/6' },
@@ -1776,83 +714,13 @@ export default function App() {
         </div>
       </section>
 
-
-
-      {/* ── GoT × Space — parallax scroll narrative ── */}
-      <section className="relative border-t border-white/5">
-        <ClientOnly><GoTSpaceScroll /></ClientOnly>
-      </section>
-
-      {/* ── Section 1: Covenant Portal — Three.js torus + orbital nodes ── */}
-      <section className="relative min-h-screen bg-[#05040f] overflow-hidden border-t border-white/5">
-        <ClientOnly><CovenantPortal /></ClientOnly>
-        <div
-          className="absolute inset-0 pointer-events-none"
-          style={{ background: 'radial-gradient(ellipse 60% 50% at 50% 50%, rgba(139,92,246,0.07) 0%, transparent 70%)' }}
-        />
-        <div className="absolute inset-0 flex flex-col items-center justify-center z-10 pointer-events-none text-center px-6">
-          <p className="text-xs font-semibold uppercase tracking-[.25em] text-violet-400 mb-5">The Covenant</p>
-          <h2 className="text-5xl sm:text-6xl lg:text-7xl font-semibold tracking-tight text-white leading-[1.05] max-w-3xl">
-            One protocol.<br />
-            <span className="text-violet-400">Any contributor.</span>
-          </h2>
-          <p className="mt-7 text-white/38 text-lg max-w-xl leading-relaxed">
-            Human or AI — every participant operates under the same verifiable rules, recorded in a tamper-evident audit log.
-          </p>
-        </div>
-      </section>
-
-      {/* ── Section 2: Hash Tunnel — scroll-driven 3D chain block descent ── */}
-      <section className="relative bg-[#03060a] overflow-hidden border-t border-white/5" style={{ height: '220vh' }}>
-        <div className="sticky top-0 h-screen overflow-hidden">
-          <ClientOnly><HashTunnel /></ClientOnly>
-          <div className="absolute inset-0 flex flex-col justify-center pl-[8%] z-10 pointer-events-none" style={{ paddingRight: '52%' }}>
-            <p className="text-xs font-semibold uppercase tracking-[.25em] text-emerald-400 mb-5">The Record</p>
-            <h2 className="text-5xl sm:text-6xl font-semibold tracking-tight text-white leading-[1.05]">
-              Every action.<br />
-              <span className="text-emerald-400">Permanently<br />recorded.</span>
-            </h2>
-            <p className="mt-7 text-white/36 text-base max-w-xs leading-relaxed">
-              Append-only SHA-256 hash chain. Tamper-evident. No deletions, no revisions.
-            </p>
-            <div className="mt-10 flex flex-col gap-2.5">
-              {[
-                { action: 'propose_passage',            color: 'bg-emerald-400' },
-                { action: 'approve_draft',              color: 'bg-violet-400'  },
-                { action: 'generate_settlement_output', color: 'bg-amber-400'   },
-              ].map(({ action, color }) => (
-                <div key={action} className="flex items-center gap-2.5">
-                  <span className={`w-2 h-2 rounded-full shrink-0 ${color}`} />
-                  <span className="font-mono text-xs text-white/32">{action}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ── Section 3: Settlement Web — canvas 2D golden token flow ── */}
-      <section className="relative min-h-screen bg-[#060408] overflow-hidden border-t border-white/5">
-        <SettlementWeb />
-        <div className="absolute top-16 left-[8%] z-10 pointer-events-none">
-          <p className="text-xs font-semibold uppercase tracking-[.25em] text-amber-400 mb-5">The Settlement</p>
-          <h2 className="text-4xl sm:text-5xl font-semibold tracking-tight text-white leading-[1.1] max-w-[280px]">
-            Earned,<br />not<br />
-            <span className="text-amber-400">assigned.</span>
-          </h2>
-          <p className="mt-6 text-white/36 text-sm max-w-[240px] leading-relaxed">
-            Tokens distributed the moment the Covenant locks. Public formula. Zero negotiation.
-          </p>
-        </div>
-      </section>
-
       {/* Why */}
       <section id="why" className="border-t border-gray-100 dark:border-gray-800">
         <div className="max-w-5xl mx-auto px-6 py-24">
           <div className="max-w-xl mb-16">
             <p className="text-xs font-semibold uppercase tracking-widest text-violet-500 mb-4">Why ACP</p>
             <h2 className="text-3xl sm:text-4xl font-semibold tracking-tight mb-6">
-              Git tracks what changed.<br />ACP tracks who it was worth.
+              Git tracks what changed.<br />ACP tracks what it was worth.
             </h2>
             <p className="text-gray-500 dark:text-gray-400 leading-relaxed mb-4">
               When multiple people — or agents — collaborate on a project, no existing tool automatically answers: <em>who contributed how much, and what do they deserve?</em>
@@ -1875,12 +743,11 @@ export default function App() {
             </div>
           </div>
 
-          {/* Covenant + MCP — premium two-panel explainer */}
+          {/* Covenant + MCP — two-panel explainer */}
           <div className="mb-14 p-px rounded-2xl" style={{ background: 'linear-gradient(135deg, rgba(139,92,246,0.55) 0%, rgba(56,189,248,0.30) 50%, rgba(139,92,246,0.15) 100%)' }}>
             <div className="rounded-2xl bg-[#07061a] p-8 sm:p-10">
               <div className="grid sm:grid-cols-2 gap-10">
 
-                {/* Left — What is a Covenant */}
                 <div>
                   <div className="flex items-center gap-3 mb-5">
                     <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0" style={{ background: 'linear-gradient(135deg, #7c3aed, #4f46e5)' }}>
@@ -1911,7 +778,6 @@ export default function App() {
                   </div>
                 </div>
 
-                {/* Right — ACP as MCP server */}
                 <div>
                   <div className="flex items-center gap-3 mb-5">
                     <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0" style={{ background: 'linear-gradient(135deg, #0369a1, #0891b2)' }}>
@@ -1979,15 +845,15 @@ export default function App() {
           <p className="text-xs font-semibold uppercase tracking-widest text-violet-500 mb-4">How it works</p>
           <h2 className="text-3xl sm:text-4xl font-semibold tracking-tight mb-8">Five steps, one formula.</h2>
 
-          {/* How the record is secured — moved first because every reviewer asks */}
+          {/* Trust model */}
           <div className="mb-16 p-6 rounded-xl border border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-900/40">
             <p className="text-xs font-semibold uppercase tracking-widest text-gray-500 mb-1">How the record is secured</p>
             <p className="text-xs text-gray-400 mb-5">ACP is not a blockchain. Choose your trust model based on what the collaboration needs.</p>
             <div className="space-y-3">
               {[
-                { layer:'Layer 1', name:'Hash Chain',  status:'Live',    desc:'Append-only SHA-256 chain on your own server. Each action hashes the previous — any edit breaks all subsequent hashes and is immediately detectable. Requires trusting the server operator has not replaced the entire chain. No blockchain required.',  color:'green' },
-                { layer:'Layer 2', name:'Git Anchor',  status:'Phase 3', desc:'Settlement hash committed to the git repo as a signed commit. If the server is ever deleted or tampered with, the git history independently proves the settlement hash existed at that point in time. Trust git history, not the server owner.', color:'yellow' },
-                { layer:'Layer 3', name:'On-chain',    status:'Phase 7', desc:'Merkle root on a public blockchain. Trustless, permissionless verification. No trust required.',                color:'gray'   },
+                { layer:'Layer 1', name:'Hash Chain',  status:'Live',            desc:'Append-only SHA-256 chain on your own server. Each action hashes the previous — any edit breaks all subsequent hashes and is immediately detectable. Requires trusting the server operator has not replaced the entire chain. No blockchain required.',  color:'green' },
+                { layer:'Layer 2', name:'Git Twin anchor', status:'Phase 3.A · In progress', desc:'Settlement hash committed to the git repo as a signed note on refs/notes/acp-anchors. ACR-400 v0.2 uses ed25519 signatures over canonical JSON — any verifier can confirm the anchor was produced by the server\'s signing key without trusting the server operator. If the server is ever deleted or tampered with, the git history independently proves the settlement hash existed at that point in time.', color:'yellow' },
+                { layer:'Layer 3', name:'On-chain',    status:'Phase 7 · Roadmap', desc:'Merkle root on a public blockchain. Trustless, permissionless verification. No trust required.', color:'gray'   },
               ].map(v => (
                 <div key={v.layer} className="flex gap-4 p-4 rounded-lg border border-gray-100 dark:border-gray-700">
                   <div className="w-16 shrink-0 text-xs text-gray-400 pt-0.5">{v.layer}</div>
@@ -2079,7 +945,6 @@ export default function App() {
               ACP doesn't require anyone to deposit crypto or commit funds upfront. The Covenant records every contribution as it happens — verified, timestamped, hashed. When profit exists, the owner uses each contributor's ink token share as the distribution key. That's it.
             </p>
 
-            {/* Flow: work → record → share */}
             <div className="mb-10 flex flex-col sm:flex-row items-stretch gap-2 sm:gap-0">
               {[
                 { step: '01', label: 'Work happens',     desc: 'Contributors propose and build. Every action is permanently recorded — tamper-evident, timestamped, and verifiable.', color: 'border-violet-800/50 bg-violet-950/20', accent: 'text-violet-400' },
@@ -2099,7 +964,6 @@ export default function App() {
               ))}
             </div>
 
-            {/* Three paths to payment */}
             <p className="text-xs font-semibold uppercase tracking-widest text-gray-500 mb-4">Three ways to share profit</p>
             <div className="grid sm:grid-cols-3 gap-4 mb-10">
               {[
@@ -2162,14 +1026,14 @@ export default function App() {
               <p className="text-amber-400/50 mb-4 uppercase tracking-widest text-[10px]">Example — $8,000 revenue distributed by ink share</p>
               <div className="space-y-2.5">
                 {[
-                  { name: 'Architect', ink: '2,580', pct: '32%', payout: '$2,560' },
-                  { name: 'Builder',   ink: '1,920', pct: '24%', payout: '$1,920' },
-                  { name: 'Auditor',   ink: '1,440', pct: '18%', payout: '$1,440' },
-                  { name: 'Catalyst',  ink: '960',   pct: '12%', payout: '$960'   },
-                  { name: 'Others',    ink: '1,100', pct: '14%', payout: '$1,120' },
+                  { name: 'Protocol Eng', ink: '2,580', pct: '32%', payout: '$2,560' },
+                  { name: 'Security',     ink: '1,920', pct: '24%', payout: '$1,920' },
+                  { name: 'Reviewer',     ink: '1,440', pct: '18%', payout: '$1,440' },
+                  { name: 'Feature Eng',  ink: '960',   pct: '12%', payout: '$960'   },
+                  { name: 'Others',       ink: '1,100', pct: '14%', payout: '$1,120' },
                 ].map(row => (
                   <div key={row.name} className="flex items-center gap-3">
-                    <span className="text-white/35 w-20 shrink-0">{row.name}</span>
+                    <span className="text-white/35 w-28 shrink-0">{row.name}</span>
                     <span className="text-amber-400/40 w-16 shrink-0">{row.ink} ink</span>
                     <div className="flex-1 bg-white/5 rounded-full h-1 overflow-hidden">
                       <div className="h-full bg-amber-400/40 rounded-full" style={{ width: row.pct }} />
@@ -2190,13 +1054,13 @@ export default function App() {
               <p className="text-xs font-semibold uppercase tracking-widest text-gray-500 mb-5">What ink tokens represent — over time</p>
               <div className="space-y-4">
                 {[
-                  { stage: 'Now',      dot: 'bg-green-400',  meaning: 'Verified contribution receipt', note: 'Tamper-evident proof of work — who built what, at what tier, accepted by the owner.' },
-                  { stage: 'Phase 2',  dot: 'bg-yellow-400', meaning: 'Distribution key for profit sharing', note: 'When revenue exists, ink percentage = payout percentage. Owner-initiated, any currency.' },
-                  { stage: 'Phase 3',  dot: 'bg-sky-400',    meaning: 'Sponsor-verified credential', note: 'Open the Covenant to funders. Ink history proves contributor value to external sponsors.' },
-                  { stage: 'Phase 7+', dot: 'bg-violet-400', meaning: 'On-chain enforceable payout', note: 'Smart contract holds escrow. Merkle root on-chain. Trustless, automatic, permissionless.' },
+                  { stage: 'Now',       dot: 'bg-green-400',  meaning: 'Verified contribution receipt',        note: 'Tamper-evident proof of work — who built what, at what tier, accepted by the owner.' },
+                  { stage: 'Phase 3.A', dot: 'bg-yellow-400', meaning: 'Externally verifiable via git anchor', note: 'Settlement hash committed to git notes with ed25519 signature. Any holder of the repo can verify without trusting the server.' },
+                  { stage: 'Phase 4+',  dot: 'bg-sky-400',    meaning: 'Distribution key for profit sharing',   note: 'When revenue exists, ink percentage = payout percentage. Owner-initiated, any currency.' },
+                  { stage: 'Phase 7+',  dot: 'bg-violet-400', meaning: 'On-chain enforceable payout',           note: 'Smart contract holds escrow. Merkle root on-chain. Trustless, automatic, permissionless.' },
                 ].map(row => (
                   <div key={row.stage} className="flex items-start gap-3 text-xs">
-                    <div className="flex items-center gap-2 w-20 shrink-0 pt-0.5">
+                    <div className="flex items-center gap-2 w-24 shrink-0 pt-0.5">
                       <span className={`w-2 h-2 rounded-full shrink-0 ${row.dot}`} />
                       <span className="font-mono font-semibold text-gray-400">{row.stage}</span>
                     </div>
@@ -2211,8 +1075,10 @@ export default function App() {
           </div>
 
           <div className="mb-16">
-            <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Git Covenant Twin</p>
-            <p className="text-xs text-gray-400 mb-5">ACP is the contribution-value digital twin of your git repo. Git events automatically sync to Covenant actions.</p>
+            <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Git Covenant Twin</p>
+            <p className="text-xs text-gray-400 mb-5">
+              ACP is the contribution-value digital twin of your git repo. Git events sync to Covenant actions; the ACR-400 v0.2 anchor writes a signed settlement note back to <span className="font-mono text-violet-500 dark:text-violet-400">refs/notes/acp-anchors</span> — Phase 3.A, in active development.
+            </p>
             <ClientOnly><GitTwinDiagram /></ClientOnly>
           </div>
 
@@ -2241,7 +1107,7 @@ export default function App() {
 
           <div>
             <p className="text-xs font-semibold uppercase tracking-widest text-violet-500 mb-2">Constitutional Principles</p>
-            <p className="text-sm text-gray-400 mb-8">The design principles embedded in every phase of ACP. Formalized in Phase 3.</p>
+            <p className="text-sm text-gray-400 mb-8">The design principles embedded in every phase of ACP.</p>
             <div className="grid sm:grid-cols-5 gap-4">
               {PRINCIPLES.map((p, i) => (
                 <FadeIn key={p.title} delay={i * 80}>
@@ -2289,7 +1155,7 @@ export default function App() {
           <span>Agent Covenant Protocol · MIT License</span>
           <div className="flex gap-6">
             <Link href="https://github.com/ymow/acp-server" className="hover:text-gray-600 dark:hover:text-gray-200 transition-colors outline-none">GitHub</Link>
-            <span>ACP v0.5 · 2026-04-15</span>
+            <span>ACP v0.6 · Phase 3.B complete · 2026-04-18</span>
           </div>
         </div>
       </footer>

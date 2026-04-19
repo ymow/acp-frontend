@@ -95,7 +95,7 @@ reject_draft()     →  passage closed, zero tokens`}</Pre>
         headers={['Layer', 'Mechanism', 'Trust model', 'Status']}
         rows={[
           ['Layer 1', 'SHA-256 append-only hash chain on the server', 'Trust the server operator', 'Live'],
-          ['Layer 2', 'ed25519-signed settlement anchor on refs/notes/acp-anchors', 'Trust git history + signing key', 'Phase 3.A · in progress'],
+          ['Layer 2', 'ed25519-signed settlement anchor on refs/notes/acp-anchors', 'Trust git history + signing key', 'Live (Phase 3.A)'],
           ['Layer 3', 'Merkle root posted on-chain', 'Trustless, permissionless', 'Phase 7 · roadmap'],
         ]}
       />
@@ -113,7 +113,7 @@ curl http://localhost:8080/covenants/$CVNT_ID/audit/verify`}</Pre>
         For self-hosted deployments where you run the server yourself, Layer 1 is sufficient.
       </P>
 
-      <H3>Layer 2 — Git Covenant Twin anchor (Phase 3.A · in progress)</H3>
+      <H3>Layer 2 — Git Covenant Twin anchor (Phase 3.A · Live)</H3>
       <P>
         The settlement hash is committed to the repository's git history as a signed note on
         <Code>refs/notes/acp-anchors</Code>. Anyone with repo access can verify the anchor independently
@@ -139,6 +139,75 @@ curl http://localhost:8080/covenants/$CVNT_ID/audit/verify`}</Pre>
         On-chain features are Phase 7 roadmap items. The current implementation is entirely off-chain.
         No blockchain, no crypto wallet, no gas fees are involved today.
       </Callout>
+
+      {/* ── Defense Layer (Phase 4) ── */}
+      <H2 id="defense-layer">Defense Layer (Phase 4)</H2>
+      <P>
+        Phase 4 hardens the server for environments where strangers can apply to join. Three pieces:
+        rate limiting, at-rest encryption, and an explicit access gate.
+      </P>
+
+      <H3 id="rate-limiting">Per-hour rate limiting (ACR-20 Part 4 Layer 2)</H3>
+      <P>
+        Every clause-tool call increments a per-(covenant, agent, hour) counter. Exceeding the limit
+        returns <Code>HTTP 429</Code> with a structured error envelope. Defaults are conservative;
+        owners tune them via <Code>configure_anti_gaming</Code>. Counters are stored in SQLite, so
+        the gate survives restarts.
+      </P>
+
+      <H3 id="at-rest-encryption">At-rest encryption (ACR-700)</H3>
+      <P>
+        Personally identifiable platform identifiers (e.g. <Code>github:octocat</Code>) are sealed
+        with AES-256-GCM before being written to disk. The ciphertext layout is self-describing:
+      </P>
+      <Pre lang="text">{`[version: 1 byte] [key_version: 3 bytes BE u24] [nonce: 12 bytes] [ct + tag: variable]`}</Pre>
+      <P>
+        AAD binds each blob to its row identity (<Code>"acp-server|" + row_id + "|" + column</Code>),
+        so cut-and-paste of one row's ciphertext into another row fails authentication. Read paths
+        only ever surface a 12-character hash prefix, never the plaintext identifier.
+      </P>
+
+      <H3 id="key-rotation">Key rotation (Phase 4.5.8)</H3>
+      <P>
+        The keyring lives at <Code>$ACP_KEY_FILE/../keys/v&#123;N&#125;.key</Code>. Rotation is
+        two commands, intentionally split so a long re-seal scan does not block the rotation itself:
+      </P>
+      <Pre lang="bash">{`acp-server rotate-key   # O(1): writes the next v{N+1}.key, bumps the active pointer
+acp-server reencrypt    # O(rows): re-seals every row sealed under an older version. Idempotent.`}</Pre>
+      <P>
+        Existing ciphertext stays readable indefinitely because old key files are kept on disk and
+        the §2.3 header records which version each row was sealed under.
+      </P>
+
+      <H3 id="key-provider">Bring your own KMS</H3>
+      <P>
+        The reference build keeps keys on local disk (<Code>LocalKeyfileProvider</Code>). The
+        <Code>KeyProvider</Code> interface lets operators plug in AWS KMS, HashiCorp Vault, GCP KMS,
+        Azure Key Vault, or an HSM — the server never depends on a built-in KMS. Contract and
+        adapter skeleton:
+      </P>
+      <P>
+        <a
+          href="https://github.com/ymow/acp-server/blob/main/docs/key-provider.md"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-violet-600 dark:text-violet-400 hover:underline"
+        >
+          docs/key-provider.md →
+        </a>
+      </P>
+
+      <H3 id="access-gate">Access gate (ACR-50 · Phase 4.6)</H3>
+      <P>
+        Open Covenants accept <Code>apply_to_covenant</Code> from anyone holding a session token.
+        The owner queue is exposed via <Code>list_members</Code> (the response includes
+        <Code>pending_access_requests</Code>); decisions go through <Code>approve_agent_access</Code>
+        / <Code>reject_agent_access</Code>. Tier-level <Code>entry_fee_tokens</Code> is booked as a
+        negative <Code>token_ledger</Code> row inside the same transaction as the approval, so the
+        new member starts at <Code>-fee</Code> and earns out from there. Applicants poll status via
+        <Code>get_agent_access_status</Code>; all error paths converge on <Code>404</Code> to avoid
+        existence-leak.
+      </P>
     </div>
   )
 }

@@ -5,8 +5,8 @@ export function QuickstartPage() {
     <div>
       <H1>Quickstart</H1>
       <Lead>
-        Get acp-server running, create a Covenant, and record your first contribution in under five minutes.
-        Prerequisites: Go 1.22+ installed. No other dependencies.
+        Get acp-server running, create a Covenant, and record your first contribution in under five
+        minutes. Prerequisites: Go 1.25+ installed. No other dependencies.
       </Lead>
 
       <H2>1. Build & run the server</H2>
@@ -20,7 +20,18 @@ go build ./...`}</Pre>
 
       <Step n={2} title="Start the server">
         <Pre lang="bash">{`ACP_ADDR=:8080 ACP_DB_PATH=./acp.db ./acp-server`}</Pre>
-        <P>The server listens on <Code>:8080</Code>. SQLite DB is created automatically at <Code>./acp.db</Code>. No migrations to run.</P>
+        <P>
+          The server listens on <Code>:8080</Code>. SQLite DB is created automatically at
+          <Code>./acp.db</Code>. No migrations to run.
+        </P>
+        <Callout type="info">
+          On first start the server generates a fresh master key at
+          <Code>$HOME/.acp/keys/v1.key</Code> (mode 0600) and prints its fingerprint. Back this file
+          up — losing it permanently breaks decryption of any encrypted column. Override the
+          location with <Code>ACP_KEY_FILE=/abs/path/master.key</Code> (the keyring lives in the
+          sibling <Code>keys/</Code> directory). To rotate later run{' '}
+          <Code>acp-server rotate-key</Code> followed by <Code>acp-server reencrypt</Code>.
+        </Callout>
       </Step>
 
       <H2>2. Create a Covenant</H2>

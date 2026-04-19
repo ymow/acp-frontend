@@ -82,7 +82,9 @@ export function DocsIndex() {
       <div className="mt-8 p-4 rounded-xl bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-800 text-sm">
         <p className="font-medium text-gray-900 dark:text-gray-100 mb-1">Status</p>
         <p className="text-gray-500 dark:text-gray-400">
-          Phase 1 + Phase 2 complete. First real Covenant settled{' '}
+          Phases 1–4 complete. Layer 1 hash chain, Layer 2 git anchor (Phase 3.A), per-hour rate
+          limiting (Phase 4.1), at-rest encryption with versioned keyring (Phase 4.5/4.5.8), and the
+          ACR-50 access gate (Phase 4.6) are all live. First real Covenant settled{' '}
           <span className="font-mono text-violet-600 dark:text-violet-400">2026-04-15</span>. MIT licensed.{' '}
           <a href="https://github.com/ymow/acp-server" target="_blank" rel="noopener noreferrer" className="text-violet-600 dark:text-violet-400 hover:underline">
             acp-server on GitHub →

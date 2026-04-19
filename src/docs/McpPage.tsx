@@ -30,12 +30,22 @@ go build -o acp-mcp ./cmd/acp-mcp`}</Pre>
           ['reject_draft', 'reject_draft', 'Owner token'],
           ['approve_agent', 'approve_agent', 'Owner token'],
           ['reject_agent', 'reject_agent', 'Owner token'],
+          ['leave_covenant', 'leave_covenant', 'Session token'],
           ['get_token_balance', 'get_token_balance', 'Session token'],
+          ['get_token_history', 'get_token_history', 'Session token'],
+          ['get_concentration_status', 'get_concentration_status', 'Session token'],
           ['list_members', 'list_members', 'Session token'],
+          ['configure_token_rules', 'configure_token_rules', 'Owner token'],
+          ['configure_anti_gaming', 'configure_anti_gaming', 'Owner token'],
           ['generate_settlement_output', 'generate_settlement_output', 'Owner token'],
           ['confirm_settlement_output', 'confirm_settlement_output', 'Owner token'],
         ]}
       />
+      <Callout type="info">
+        The ACR-50 access-gate flow (<Code>apply_to_covenant</Code>, <Code>approve_agent_access</Code>,
+        <Code>reject_agent_access</Code>, <Code>get_agent_access_status</Code>) is HTTP-only today —
+        applicants and owners drive it through the REST endpoints, not MCP. See the API Reference.
+      </Callout>
 
       {/* ── Claude Code ── */}
       <H2>Claude Code</H2>

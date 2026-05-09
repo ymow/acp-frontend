@@ -34,6 +34,14 @@ const CARDS = [
     accent: 'bg-emerald-50 dark:bg-emerald-950/30 border-emerald-200 dark:border-emerald-800',
     tag: 'text-emerald-600 dark:text-emerald-400',
   },
+  {
+    to: '/docs/specs',
+    label: 'Reference',
+    title: 'ACR Specs',
+    desc: 'The 13 ACR documents that define the protocol — shipped, drafting, and speculative drafts for Phase 5–7.',
+    accent: 'bg-amber-50 dark:bg-amber-950/30 border-amber-200 dark:border-amber-800',
+    tag: 'text-amber-600 dark:text-amber-400',
+  },
 ]
 
 export function DocsIndex() {

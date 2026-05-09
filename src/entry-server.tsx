@@ -13,6 +13,7 @@ import { QuickstartPage } from './docs/QuickstartPage.tsx'
 import { ConceptsPage } from './docs/ConceptsPage.tsx'
 import { ApiRefPage } from './docs/ApiRefPage.tsx'
 import { McpPage } from './docs/McpPage.tsx'
+import { AcrIndexPage } from './docs/AcrIndexPage.tsx'
 
 export function render(url: string = '/') {
   return renderToString(
@@ -26,6 +27,7 @@ export function render(url: string = '/') {
             <Route path="concepts" element={<ConceptsPage />} />
             <Route path="api" element={<ApiRefPage />} />
             <Route path="mcp" element={<McpPage />} />
+            <Route path="specs" element={<AcrIndexPage />} />
           </Route>
         </Routes>
       </StaticRouter>

@@ -21,6 +21,7 @@ const NAV = [
     items: [
       { label: 'API Reference', to: '/docs/api' },
       { label: 'MCP Integration', to: '/docs/mcp' },
+      { label: 'ACR Specs', to: '/docs/specs' },
     ],
   },
 ]

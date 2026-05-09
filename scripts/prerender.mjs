@@ -67,6 +67,7 @@ const ROUTES = [
   '/docs/concepts',
   '/docs/api',
   '/docs/mcp',
+  '/docs/specs',
 ]
 
 const vite = await createServer({

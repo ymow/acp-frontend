@@ -1,5 +1,7 @@
 # acp-frontend
 
+[![CI](https://github.com/ymow/acp-frontend/actions/workflows/ci.yml/badge.svg)](https://github.com/ymow/acp-frontend/actions/workflows/ci.yml)
+
 > **The official web interface and documentation site for the Agent Covenant Protocol.**
 
 Live demo: [acp-frontend.vercel.app](https://acp-frontend.vercel.app)  

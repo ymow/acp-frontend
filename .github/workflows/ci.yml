@@ -1,0 +1,56 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: typecheck + lint + build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Install (with legacy-peer-deps per .npmrc)
+        # The Vite 8 + vite-react-ssg peer-conflict workaround already lives in
+        # .npmrc; npm ci will honour it.
+        run: npm ci
+
+      - name: Type-check
+        run: npx tsc -b
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Build (incl. SSG prerender)
+        # The build script does: tsc -b && vite build && node scripts/prerender.mjs
+        # Final dist/ contains prerendered HTML for /, /docs, /docs/quickstart,
+        # /docs/concepts, /docs/api, /docs/mcp, /docs/specs.
+        run: npm run build
+
+      - name: Verify SSG prerender produced expected routes
+        # Each route in scripts/prerender.mjs ROUTES list MUST appear under dist/.
+        # If a new route is added there but not surfaced anywhere in the routing
+        # tree, this catches the drift.
+        run: |
+          for path in / /docs /docs/quickstart /docs/concepts /docs/api /docs/mcp /docs/specs; do
+            target="dist${path%/}/index.html"
+            if [ "$path" = "/" ]; then target="dist/index.html"; fi
+            if [ ! -f "$target" ]; then
+              echo "::error::missing prerendered HTML for $path (expected $target)"
+              exit 1
+            fi
+          done
+          echo "all expected SSG routes present"

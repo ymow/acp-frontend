@@ -50,10 +50,15 @@ go build ./...`}</Pre>
   -H "Content-Type: application/json" \\
   -d '[
     {"name":"core",    "multiplier": 3.0},
-    {"name":"feature", "multiplier": 2.0},
+    {"name":"feature", "multiplier": 2.0, "entry_fee_tokens": 50},
     {"name":"review",  "multiplier": 1.5},
     {"name":"docs",    "multiplier": 1.0}
   ]'`}</Pre>
+        <Callout type="tip">
+          <Code>entry_fee_tokens</Code> is optional (Phase 4.6.C, ACR-50 §7). When non-zero, an
+          applicant joining at that tier must commit the fee from their own balance — surfaces in
+          the audit log via the entry-fee ledger entry.
+        </Callout>
       </Step>
 
       <Step n={5} title="Transition Covenant to OPEN">
@@ -64,34 +69,57 @@ go build ./...`}</Pre>
         <P>Participants can now apply to join.</P>
       </Step>
 
-      <H2>3. Add a participant and submit a passage</H2>
+      <H2>3. Add a participant via the ACR-50 access gate</H2>
 
-      <Step n={6} title="Issue a session token for a participant">
-        <Pre lang="bash">{`curl -s -X POST http://localhost:8080/sessions/issue \\
-  -H "X-Owner-Token: $OWNER_TOKEN" \\
+      <Callout type="info">
+        Phase 4.6 introduced ACR-50: a structured access flow where applicants <Code>apply</Code>{' '}
+        before being approved, owners review applications, and entry fees (if configured) are
+        captured. The legacy <Code>/join</Code> + <Code>approve_agent</Code> path still works for
+        back-compat, but new integrations should use <Code>apply_to_covenant</Code> /{' '}
+        <Code>approve_agent_access</Code>.
+      </Callout>
+
+      <Step n={6} title="Applicant submits an access request">
+        <Pre lang="bash">{`curl -s -X POST http://localhost:8080/covenants/$CVNT_ID/apply \\
   -H "Content-Type: application/json" \\
-  -d '{"agent_id": "agent_alice"}' | jq .`}</Pre>
-        <P>Returns a <Code>session_token</Code> for the participant.</P>
+  -d '{
+    "platform_id": "github:alice",
+    "tier_id": "feature",
+    "payment_ref": "stripe:ch_xxx",
+    "self_declaration": "I built the auth flow"
+  }' | jq .`}</Pre>
+        <P>
+          Public endpoint — applicants don't yet have a session. Returns a{' '}
+          <Code>request_id</Code> and a 12-char <Code>platform_id_hash_prefix</Code> so the applicant
+          can verify the server received their submission without the server re-echoing the raw
+          platform_id (sealed at rest under ACR-700).
+        </P>
       </Step>
 
-      <Step n={7} title="Participant joins the Covenant">
-        <Pre lang="bash">{`curl -s -X POST http://localhost:8080/covenants/$CVNT_ID/join \\
-  -H "X-Session-Token: $SESSION_TOKEN" \\
-  -H "X-Agent-ID: agent_alice" \\
-  -H "Content-Type: application/json"`}</Pre>
-      </Step>
-
-      <Step n={8} title="Owner approves the participant">
-        <Pre lang="bash">{`curl -s -X POST http://localhost:8080/tools/approve_agent \\
+      <Step n={7} title="Owner approves the access request">
+        <Pre lang="bash">{`curl -s -X POST http://localhost:8080/tools/approve_agent_access \\
   -H "X-Covenant-ID: $CVNT_ID" \\
   -H "X-Owner-Token: $OWNER_TOKEN" \\
   -H "Content-Type: application/json" \\
-  -d '{"params": {"agent_id": "agent_alice"}}'`}</Pre>
-        <P>Transition the Covenant to ACTIVE before passages can be submitted.</P>
+  -d '{"params": {"request_id": "REQUEST_ID_FROM_ABOVE"}}'`}</Pre>
+        <P>
+          On approval the server creates the <Code>covenant_members</Code> row, mints a session
+          token bound to the applicant, and (if the tier has <Code>entry_fee_tokens</Code>) records
+          the entry-fee ledger entry. Pending requests are also surfaced via{' '}
+          <Code>list_members</Code> for owner triage.
+        </P>
+        <P>The applicant can poll status before approval:</P>
+        <Pre lang="bash">{`curl -s -X POST http://localhost:8080/tools/get_agent_access_status \\
+  -H "Content-Type: application/json" \\
+  -d '{"params": {"covenant_id": "$CVNT_ID", "request_id": "REQUEST_ID"}}'`}</Pre>
+      </Step>
+
+      <Step n={8} title="Transition Covenant to ACTIVE">
         <Pre lang="bash">{`curl -s -X POST http://localhost:8080/covenants/$CVNT_ID/transition \\
   -H "X-Owner-Token: $OWNER_TOKEN" \\
   -H "Content-Type: application/json" \\
   -d '{"to": "ACTIVE"}'`}</Pre>
+        <P>Once ACTIVE, approved participants can submit passages.</P>
       </Step>
 
       <Step n={9} title="Submit and approve a passage">

@@ -547,7 +547,7 @@ const FAQ_ITEMS = [
   },
   {
     q: 'What happens if the owner refuses to pay according to the settled record?',
-    a: 'In Phases 1–3, the protocol enforces the record — not the payment. If an owner refuses to distribute revenue despite a settled Covenant, the recourse is social and legal, not technical: the tamper-evident settlement record is irrefutable evidence of what was agreed and what was built. Phase 3.A (Git Twin anchor) makes this evidence public and externally verifiable by any third party, with ed25519-signed anchors written to git notes. Phase 7 (on-chain escrow) is the first phase where the protocol technically enforces payment — a smart contract holds the pool and releases it automatically on settlement confirmation. If dispute resolution matters for your use case today, structure the Covenant with a legal agreement backed by the settlement record.',
+    a: 'In Phases 1–4, the protocol enforces the record — not the payment. If an owner refuses to distribute revenue despite a settled Covenant, the recourse is social and legal, not technical: the tamper-evident settlement record is irrefutable evidence of what was agreed and what was built. Phase 3.A (Git Twin anchor) makes this evidence public and externally verifiable by any third party, with ed25519-signed anchors written to git notes — shipped. Phase 7.A (Escrow + Auto-Settlement) is the first phase where the protocol technically enforces payment — a smart contract holds the pool and releases it automatically on settlement confirmation; ACR-500 v0.1 is in spec drafting. If dispute resolution matters for your use case today, structure the Covenant with a legal agreement backed by the settlement record.',
   },
   {
     q: 'If multiple AI agents collaborate on a single contribution, how is credit split?',
@@ -555,15 +555,15 @@ const FAQ_ITEMS = [
   },
   {
     q: 'Can an owner fake multiple AI agents to inflate their own ink share?',
-    a: 'Today, the owner assigns agent_ids — there is no cryptographic proof preventing them from creating multiple identities. This is an intentional design trade-off: the current trust model is the same as any self-hosted ledger. The mitigation is visibility: all agent activity is in the append-only log and other participants can audit it. Phase 3.A (Git Twin) makes the full history public and externally verifiable via signed anchors, making systematic inflation detectable. Phase 7 (on-chain) makes it trustless.',
+    a: 'Today, the owner assigns agent_ids — there is no cryptographic proof preventing them from creating multiple identities. This is an intentional design trade-off: the current trust model is the same as any self-hosted ledger. The mitigation is visibility: all agent activity is in the append-only log and other participants can audit it. Phase 3.A (Git Twin, shipped) makes the full history public and externally verifiable via signed anchors, making systematic inflation detectable. Phase 7.A (Escrow, spec drafting) introduces real-money skin-in-the-game; Phase 7.D (on-chain Merkle proof, gated on 7.A) makes it trustless.',
   },
   {
     q: 'If the server goes offline, do participants lose their proof of work?',
-    a: 'No — participants can export their settlement JSON from acp-server, retaining a tamper-evident record. From Phase 3.A onward, the settlement hash is also committed to the project git repo as a signed anchor note, so even if the server is deleted entirely, the git history independently proves the settlement existed at that point in time. You do not need the server to remain online to prove what was built.',
+    a: 'No — participants can export their settlement JSON from acp-server, retaining a tamper-evident record. Phase 3.A is shipped: the settlement hash is committed to the project git repo as a signed anchor note, so even if the server is deleted entirely, the git history independently proves the settlement existed at that point in time. You do not need the server to remain online to prove what was built.',
   },
   {
     q: 'Is this live, or a prototype?',
-    a: 'ACP is live. Phases 1, 2, 3.0, and 3.B (Token Lifecycle) are complete as of 2026-04-18. Phase 3.A (Git Covenant Twin) is in active development — ACR-400 v0.2 with ed25519-signed anchors has landed in acp-server. The first real Covenant was settled on 2026-04-15 (Covenant ID: cvnt_a54e1c43). The repository is MIT licensed and publicly available. You can run it today with a single binary and no external dependencies.',
+    a: 'ACP is live. Phases 1 → 4 are complete as of 2026-05: MVP core, full passage flow, Phase 3.A Git Covenant Twin (ACR-400 v0.2 ed25519-signed anchors), Phase 4.1 per-hour rate limiting, Phase 4.5 platform_id at-rest encryption with versioned keyring (ACR-700 v0.1), and Phase 4.6 ACR-50 access gate with entry-fee ledger. Phase 7.A (Escrow + Auto-Settlement) is in spec drafting — ACR-500 v0.1 has 10 implementation-blocking decisions queued for working-group ratification. The first real Covenant settled 2026-04-15 (cvnt_a54e1c43, 4,475 ink, hash chain valid). MIT licensed, single-binary, zero external Go deps.',
   },
 ]
 
@@ -852,8 +852,8 @@ export default function App() {
             <div className="space-y-3">
               {[
                 { layer:'Layer 1', name:'Hash Chain',  status:'Live',            desc:'Append-only SHA-256 chain on your own server. Each action hashes the previous — any edit breaks all subsequent hashes and is immediately detectable. Requires trusting the server operator has not replaced the entire chain. No blockchain required.',  color:'green' },
-                { layer:'Layer 2', name:'Git Twin anchor', status:'Phase 3.A · In progress', desc:'Settlement hash committed to the git repo as a signed note on refs/notes/acp-anchors. ACR-400 v0.2 uses ed25519 signatures over canonical JSON — any verifier can confirm the anchor was produced by the server\'s signing key without trusting the server operator. If the server is ever deleted or tampered with, the git history independently proves the settlement hash existed at that point in time.', color:'yellow' },
-                { layer:'Layer 3', name:'On-chain',    status:'Phase 7 · Roadmap', desc:'Merkle root on a public blockchain. Trustless, permissionless verification. No trust required.', color:'gray'   },
+                { layer:'Layer 2', name:'Git Twin anchor', status:'Live',            desc:'Settlement hash committed to the git repo as a signed note on refs/notes/acp-anchors. ACR-400 v0.2 uses ed25519 signatures over canonical JSON — any verifier can confirm the anchor was produced by the server\'s signing key without trusting the server operator. If the server is ever deleted or tampered with, the git history independently proves the settlement hash existed at that point in time. Phase 3.A shipped.', color:'green'  },
+                { layer:'Layer 3', name:'On-chain',    status:'Phase 7.D · Gated on 7.A', desc:'Merkle root on a public blockchain. Trustless, permissionless verification. Phase 7.D is downstream of Phase 7.A (Escrow + Auto-Settlement, ACR-500 v0.1 in spec drafting).', color:'gray'   },
               ].map(v => (
                 <div key={v.layer} className="flex gap-4 p-4 rounded-lg border border-gray-100 dark:border-gray-700">
                   <div className="w-16 shrink-0 text-xs text-gray-400 pt-0.5">{v.layer}</div>
@@ -988,10 +988,10 @@ export default function App() {
                 {
                   icon: '▦',
                   label: 'On-chain trustless',
-                  status: 'Phase 7 · Roadmap',
+                  status: 'Phase 7.A · Spec drafting (ACR-500)',
                   statusColor: 'bg-gray-800 text-gray-500',
                   color: 'gray',
-                  desc: 'Smart contract holds the pool. ACP Merkle root posted on-chain. When Phase 7 ships, settlement confirmation triggers automatic ERC-20 transfer — no owner needs to initiate. The smart contract enforces it.',
+                  desc: 'Smart contract holds the pool. When Phase 7.A ships, settlement confirmation triggers automatic ERC-20 transfer — no owner needs to initiate. ACR-500 v0.1 has 10 implementation-blocking decisions queued for working-group ratification.',
                   note: 'Fully trustless, self-executing. No trust required.',
                 },
               ].map(m => (
@@ -1054,10 +1054,10 @@ export default function App() {
               <p className="text-xs font-semibold uppercase tracking-widest text-gray-500 mb-5">What ink tokens represent — over time</p>
               <div className="space-y-4">
                 {[
-                  { stage: 'Now',       dot: 'bg-green-400',  meaning: 'Verified contribution receipt',        note: 'Tamper-evident proof of work — who built what, at what tier, accepted by the owner.' },
-                  { stage: 'Phase 3.A', dot: 'bg-yellow-400', meaning: 'Externally verifiable via git anchor', note: 'Settlement hash committed to git notes with ed25519 signature. Any holder of the repo can verify without trusting the server.' },
-                  { stage: 'Phase 4+',  dot: 'bg-sky-400',    meaning: 'Distribution key for profit sharing',   note: 'When revenue exists, ink percentage = payout percentage. Owner-initiated, any currency.' },
-                  { stage: 'Phase 7+',  dot: 'bg-violet-400', meaning: 'On-chain enforceable payout',           note: 'Smart contract holds escrow. Merkle root on-chain. Trustless, automatic, permissionless.' },
+                  { stage: 'Now',       dot: 'bg-green-400',  meaning: 'Verified + externally anchored',       note: 'Hash chain on the server (Phase 1) plus signed git anchors (Phase 3.A) — repo holders can verify settlement without trusting the server. Encryption + access gate land in Phase 4.5/4.6.' },
+                  { stage: 'Phase 4+',  dot: 'bg-green-400',  meaning: 'Distribution key for profit sharing',   note: 'Live. When revenue exists, ink percentage = payout percentage. Owner-initiated, any currency.' },
+                  { stage: 'Phase 7.A', dot: 'bg-yellow-400', meaning: 'Escrow + auto-settlement',              note: 'ACR-500 v0.1 in spec drafting; 10 working-group decisions block implementation. USDC on Base is the target settlement rail.' },
+                  { stage: 'Phase 7.D', dot: 'bg-violet-400', meaning: 'On-chain trustless payout',             note: 'Merkle root on-chain, dispute resolution, GT proof claims. Gated on 7.A.' },
                 ].map(row => (
                   <div key={row.stage} className="flex items-start gap-3 text-xs">
                     <div className="flex items-center gap-2 w-24 shrink-0 pt-0.5">
@@ -1077,7 +1077,7 @@ export default function App() {
           <div className="mb-16">
             <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Git Covenant Twin</p>
             <p className="text-xs text-gray-400 mb-5">
-              ACP is the contribution-value digital twin of your git repo. Git events sync to Covenant actions; the ACR-400 v0.2 anchor writes a signed settlement note back to <span className="font-mono text-violet-500 dark:text-violet-400">refs/notes/acp-anchors</span> — Phase 3.A, in active development.
+              ACP is the contribution-value digital twin of your git repo. Git events sync to Covenant actions; the ACR-400 v0.2 anchor writes a signed settlement note back to <span className="font-mono text-violet-500 dark:text-violet-400">refs/notes/acp-anchors</span> — Phase 3.A, shipped.
             </p>
             <ClientOnly><GitTwinDiagram /></ClientOnly>
           </div>

@@ -22,7 +22,7 @@ const CARDS = [
     to: '/docs/api',
     label: 'Reference',
     title: 'API Reference',
-    desc: 'All 10 interfaces (propose_passage, approve_draft, generate_settlement_output…) with params and examples.',
+    desc: 'All 18 interfaces — passage flow, ACR-50 access gate, settlement, audit — with params and examples.',
     accent: 'bg-gray-50 dark:bg-gray-900/50 border-gray-200 dark:border-gray-800',
     tag: 'text-gray-500 dark:text-gray-400',
   },

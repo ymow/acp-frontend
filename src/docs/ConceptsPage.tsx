@@ -27,7 +27,7 @@ export function ConceptsPage() {
       <Table
         headers={['Variable', 'Type', 'Description']}
         rows={[
-          ['unit_count', 'integer', 'Self-reported size of the contribution. Convention is per-project: code → lines changed, prose → word count, design → screens. Phase 3 will auto-derive this from git diffs.'],
+          ['unit_count', 'integer', 'Self-reported size of the contribution. Convention is per-project: code → lines changed, prose → word count, design → screens. Auto-derivation from git diffs is a Phase 5+ roadmap item, not implemented today.'],
           ['tier_multiplier', 'float', 'Value tier assigned at passage submission (core=3×, feature=2×, review=1.5×, docs=1×)'],
           ['acceptance_ratio', 'float 0–1', 'Quality factor set by the owner when approving the draft. 1.0 = full credit, 0.5 = half credit. This is the owner\'s correction lever for inflated counts.'],
         ]}
@@ -128,16 +128,24 @@ curl http://localhost:8080/covenants/$CVNT_ID/audit/verify`}</Pre>
       </P>
       <P>Reference artefact: <Code>settlements/2026-04-15-acp-server-phase1-2.json</Code> in the acp-server repo.</P>
 
-      <H3>Layer 3 — On-chain Merkle Proof (Phase 7)</H3>
+      <H3>Layer 3 — On-chain Merkle Proof (Phase 7.D)</H3>
       <P>
         Merkle root of all settlement hashes published on a public blockchain. Fully trustless verification —
-        no server access required. This enables smart contract escrow and automatic ERC-20 distribution.
-        Phase 7 is roadmap only; no timeline committed.
+        no server access required. Phase 7.D is gated on Phase 7.A (Escrow + Auto-Settlement) landing first.
       </P>
 
+      <Callout type="info">
+        <strong>Phase 7.A — Escrow + Auto-Settlement (spec drafting).</strong> ACR-500 v0.1 is
+        drafted; ten implementation-blocking decisions (custody model, lock timing, gas allocation,
+        chain selection, etc.) are queued for working-group ratification before code starts.
+        Until 7.A ships, settlement remains an off-chain owner-initiated action — see the
+        legacy <Code>generate_settlement_output</Code> /{' '}
+        <Code>confirm_settlement_output</Code> flow.
+      </Callout>
+
       <Callout type="warn">
-        On-chain features are Phase 7 roadmap items. The current implementation is entirely off-chain.
-        No blockchain, no crypto wallet, no gas fees are involved today.
+        On-chain features (7.B/7.C/7.D) are downstream of 7.A. The current implementation is
+        entirely off-chain. No blockchain, no crypto wallet, no gas fees are involved today.
       </Callout>
 
       {/* ── Defense Layer (Phase 4) ── */}

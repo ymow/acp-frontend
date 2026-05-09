@@ -312,9 +312,11 @@ function HexGridBg() {
       ctx.beginPath()
       for (let i = 0; i < 6; i++) {
         const a = (Math.PI / 3) * i - Math.PI / 6
-        i === 0
-          ? ctx.moveTo(cx + s * Math.cos(a), cy + s * Math.sin(a))
-          : ctx.lineTo(cx + s * Math.cos(a), cy + s * Math.sin(a))
+        if (i === 0) {
+          ctx.moveTo(cx + s * Math.cos(a), cy + s * Math.sin(a))
+        } else {
+          ctx.lineTo(cx + s * Math.cos(a), cy + s * Math.sin(a))
+        }
       }
       ctx.closePath()
     }
@@ -515,6 +517,12 @@ const SETTLEMENT = [
 /* ── ClientOnly: renders children only after hydration (SSR safety) ───────── */
 function ClientOnly({ children, fallback = null }: { children: ReactNode; fallback?: ReactNode }) {
   const [mounted, setMounted] = useState(false)
+  // The `setState in effect` rule flags this, but the pattern is a deliberate
+  // SSG hydration probe: vite-react-ssg renders to HTML on the server with
+  // mounted=false (so non-deterministic / browser-only children are skipped),
+  // then on the client `useEffect` flips us to mounted=true and the real
+  // children render. There's no cascade — one render, then one re-render.
+  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => { setMounted(true) }, [])
   return mounted ? <>{children}</> : <>{fallback}</>
 }

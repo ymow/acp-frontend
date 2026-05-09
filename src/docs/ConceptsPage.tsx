@@ -137,9 +137,27 @@ curl http://localhost:8080/covenants/$CVNT_ID/audit/verify`}</Pre>
       <Callout type="info">
         <strong>Phase 7.A — Escrow + Auto-Settlement (spec drafting).</strong> ACR-500 v0.1 is
         drafted; ten implementation-blocking decisions (custody model, lock timing, gas allocation,
-        chain selection, etc.) are queued for working-group ratification before code starts.
-        Until 7.A ships, settlement remains an off-chain owner-initiated action — see the
-        legacy <Code>generate_settlement_output</Code> /{' '}
+        chain selection, etc.) are queued for working-group ratification before code starts —
+        see{' '}
+        <a
+          href="https://github.com/ymow/acp-server/blob/main/docs/PHASE-7A-DECISIONS.md"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-violet-600 dark:text-violet-400 hover:underline"
+        >
+          PHASE-7A-DECISIONS.md
+        </a>{' '}
+        for the live ratification queue, or{' '}
+        <a
+          href="https://github.com/ymow/acp-server/blob/main/docs/PHASE-NEXT.md"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-violet-600 dark:text-violet-400 hover:underline"
+        >
+          PHASE-NEXT.md
+        </a>{' '}
+        for what's actually queued. Until 7.A ships, settlement remains an off-chain owner-initiated
+        action — see the legacy <Code>generate_settlement_output</Code> /{' '}
         <Code>confirm_settlement_output</Code> flow.
       </Callout>
 
